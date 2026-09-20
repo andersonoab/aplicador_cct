@@ -77,6 +77,10 @@ tr.rowConf td{background:#ECECEC !important;color:#8A8A8A !important}
 tr.rowAvoBad td{box-shadow:inset 3px 0 0 var(--terra)}
 tr.rowPara td{box-shadow:inset 3px 0 0 var(--vinho)}
 tr.rowPara td:first-child::before{content:"★ ";color:var(--vinho);font-weight:700}
+/* Histórico salarial — pintura por tipo */
+tr.rowCCT td{box-shadow:inset 3px 0 0 var(--azul)}
+tr.rowMerito td{box-shadow:inset 3px 0 0 var(--verde)}
+tr.rowPromo.rowPromo td{box-shadow:inset 3px 0 0 var(--vinho)}
 .tag.para{background:var(--vinho)}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--txt2);margin:6px 2px 10px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -121,13 +125,25 @@ input.baseInp{width:100%;min-width:88px;padding:3px 6px;font-size:12px;text-alig
 input.baseInp:hover{border-color:var(--borda);background:#fff}
 input.baseInp:focus{outline:none;border-color:var(--azul);background:#fff}
 input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;color:#7a5b12}
+/* ---------- reordenar colunas (drag-and-drop) ---------- */
+.reorder-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.reorder-item{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12.5px;cursor:grab;transition:box-shadow .12s,border-color .12s;user-select:none}
+.reorder-item:active{cursor:grabbing}
+.reorder-item.dragging{opacity:.4;box-shadow:0 4px 14px rgba(0,60,100,.18);border-color:var(--azul)}
+.reorder-item.drop-target{border-color:var(--azul);background:var(--hdr-tab);box-shadow:0 0 0 2px rgba(0,131,202,.25)}
+.reorder-handle{color:var(--azul-cl);font-size:15px;line-height:1;flex-shrink:0}
+.reorder-badge{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--hdr-tab);color:var(--hdr-txt);flex-shrink:0}
+.reorder-badge.fixed{background:#EEF3F7;color:var(--cinza)}
+.reorder-tabs{display:flex;gap:0;border-bottom:2px solid var(--azul);margin-bottom:14px}
+.reorder-tab{padding:7px 18px;cursor:pointer;font-size:13px;color:var(--txt2);border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0}
+.reorder-tab.active{background:var(--hdr-tab);color:var(--hdr-txt);border-color:var(--borda);font-weight:500}
 </style>
 </head>
 <body>
 <div class="appbar">
   <div>
     <h1>Aplicador de Dissídio / CCT</h1>
-    <div class="sub"><b>v2.7</b></div>
+    <div class="sub"><b>v2.9</b></div>
   </div>
   <div class="logo">Igarapé Digital</div>
   <svg class="wave" viewBox="0 0 1200 20" preserveAspectRatio="none"><path d="M0 12 Q150 2 300 12 T600 12 T900 12 T1200 12 V20 H0 Z" fill="#fff"/></svg>
@@ -377,9 +393,24 @@ input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;co
 &#10;• vários termos = AND
 &#10;• &quot;aspas&quot; = frase exata">ℹ</span>
       <input id="histBusca" oninput="renderHist()" placeholder="ex.: merito 2025   ou   promoção fono"></label>
+    <label class="fld">Tipo de aumento
+      <select id="histTipo" onchange="renderHist()">
+        <option value="">Todos os tipos</option>
+        <option value="CCT">CCT / Dissídio</option>
+        <option value="MERITO">Mérito</option>
+        <option value="PROMOCAO">Promoção</option>
+        <option value="INDIVIDUAL">Individual (outros)</option>
+      </select>
+    </label>
+    <label class="fld">Ano
+      <select id="histAno" onchange="renderHist()"><option value="">Todos os anos</option></select>
+    </label>
     <span style="flex:1"></span>
+    <button class="btn sec" onclick="exportarHist('csv')">⬇ CSV</button>
+    <button class="btn primary" onclick="exportarHist('xlsx')">⬇ Excel</button>
     <button class="btn ghost" onclick="abrirSeletorColunas('hist')" id="btnColHist">🔧 Colunas visíveis</button>
   </div>
+  <div class="kpis" id="histKpis"></div>
   <div class="tablewrap"><table class="data" id="tblHist"><thead></thead><tbody></tbody></table></div>
 </div>
 
@@ -401,7 +432,8 @@ const KEY='dissidio_sonova_v1';
 const DB_NAME='DissidioSonovaDB', DB_STORE='kv', DB_VERSION=1;
 let ST={ cadastro:[], hist:[], acordos:[], overrides:{}, edIndex:-1,
          cadHeaders:[], histHeaders:[],
-         colunasExtras:{calc:[], con:[], base:[], hist:[], _touched:{calc:false,con:false,base:false,hist:false}} };
+         colunasExtras:{calc:[], con:[], base:[], hist:[], _touched:{calc:false,con:false,base:false,hist:false}},
+         colOrdem:{calc:[], con:[], base:[], hist:[]} };
 let RESULTS={};        // {acordoId:[res]}
 
 /* ============================================================
@@ -493,7 +525,11 @@ const MAP_CAD={
   id_sonova:["id sonova","id_sonova","idsonova"],
   cpf:["cpf empregado","cpf"],
   nome:["nome empregado","nome do funcionário","nome do funcionario","nome"],
-  uf:["endereço - uf_1","endereco - uf_1","uf","endereço - uf","endereco - uf"],
+  uf:["endereço - uf_1","endereco - uf_1","endereço - uf_2","endereco - uf_2",
+      "endereço - uf","endereco - uf","uf_1","uf"],
+  municipio:["endereço - município nome_2","endereco - municipio nome_2",
+             "endereço - município nome_1","endereco - municipio nome_1",
+             "município nome_2","municipio nome_2","município","municipio","cidade"],
   sindicato:["sindicato - razão social","sindicato - razao social","sindicato"],
   vinculo:["vínculo empregatício - nome","vinculo empregaticio - nome","vínculo","vinculo"],
   salario:["salário mensal","salario mensal","salário","salario"],
@@ -520,9 +556,20 @@ const MAP_HIST={
 ============================================================ */
 const norm=s=>String(s==null?"":s).trim().toLowerCase().replace(/\s+/g," ");
 function acharCol(headers, alvos){
+  // norm sem acento — garante match independente de cedilha/acento no cabeçalho
+  const normSA=s=>stripAcc(String(s==null?"":s).trim()).toLowerCase().replace(/\s+/g," ");
   const H=headers.map(h=>norm(h));
-  for(const a of alvos){ const i=H.indexOf(norm(a)); if(i>=0) return i; }
-  for(let i=0;i<H.length;i++){ for(const a of alvos){ if(H[i].includes(norm(a))) return i; } }
+  const HSA=headers.map(h=>normSA(h));
+  const alvosN=alvos.map(a=>norm(a));
+  const alvosSA=alvos.map(a=>normSA(a));
+  // 1) casamento exato com norm (original)
+  for(let ai=0;ai<alvosN.length;ai++){ const i=H.indexOf(alvosN[ai]); if(i>=0) return i; }
+  // 2) casamento exato sem acento
+  for(let ai=0;ai<alvosSA.length;ai++){ const i=HSA.indexOf(alvosSA[ai]); if(i>=0) return i; }
+  // 3) casamento parcial com norm
+  for(let i=0;i<H.length;i++){ for(const a of alvosN){ if(H[i].includes(a)) return i; } }
+  // 4) casamento parcial sem acento
+  for(let i=0;i<HSA.length;i++){ for(const a of alvosSA){ if(HSA[i].includes(a)) return i; } }
   return -1;
 }
 function parseNum(v){ // uso geral / percentuais: ponto isolado = decimal
@@ -625,6 +672,7 @@ function serial(s){
     overrides:s.overrides||{}, edIndex:-1,
     cadHeaders:s.cadHeaders||[], histHeaders:s.histHeaders||[],
     colunasExtras:s.colunasExtras||{calc:[],con:[],base:[],hist:[],_touched:{calc:false,con:false,base:false,hist:false}},
+    colOrdem:s.colOrdem||{calc:[],con:[],base:[],hist:[]},
     acordos:s.acordos.map(a=>({...a, faixas:a.faixas.map(f=>({avo:f.avo,
       ini:f.ini?dISO(f.ini):null, fim:f.fim?dISO(f.fim):null, pct:f.pct}))})) };
 }
@@ -638,8 +686,9 @@ function deserial(o){
       ? {calc:!!ce._touched.calc,con:!!ce._touched.con,base:!!ce._touched.base,hist:!!ce._touched.hist}
       : {calc:!!ce._touched,con:!!ce._touched,base:!!ce._touched,hist:!!ce._touched}
   };
+  const co=o.colOrdem||{}; const coNorm={calc:co.calc||[],con:co.con||[],base:co.base||[],hist:co.hist||[]};
   const s={cadastro:o.cadastro||[],hist:o.hist||[],acordos:[],overrides:o.overrides||{},edIndex:-1,
-           cadHeaders:o.cadHeaders||[], histHeaders:o.histHeaders||[], colunasExtras:ceNorm};
+           cadHeaders:o.cadHeaders||[], histHeaders:o.histHeaders||[], colunasExtras:ceNorm, colOrdem:coNorm};
   s.cadastro.forEach(f=>{f._adm=parseData(f.admissao);f._des=parseData(f.desligamento);f._trd=parseData(f.transf_data); if(!f._raw)f._raw={};});
   s.hist.forEach(h=>{ h._dh=h._dh?parseData(h._dh):null; if(!h._raw)h._raw={}; });
   s.acordos=(o.acordos||[]).map(a=>({...a, faixas:(a.faixas||[]).map(f=>({avo:f.avo,
@@ -661,7 +710,8 @@ function restaurar(ev){
 function limparTudo(){
   if(!confirm("Limpar tudo (base, histórico e acordos)?")) return;
   ST={cadastro:[],hist:[],acordos:[],overrides:{},edIndex:-1,cadHeaders:[],histHeaders:[],
-      colunasExtras:{calc:[],con:[],base:[],hist:[],_touched:{calc:false,con:false,base:false,hist:false}}}; RESULTS={};
+      colunasExtras:{calc:[],con:[],base:[],hist:[],_touched:{calc:false,con:false,base:false,hist:false}},
+      colOrdem:{calc:[],con:[],base:[],hist:[]}}; RESULTS={};
   try{localStorage.removeItem(KEY);}catch(_){}
   DB.del(KEY).catch(()=>{});
   const w=document.getElementById("quotaWarn"); if(w)w.remove();
@@ -750,6 +800,7 @@ function lerCadastro(aoa){
       nome:c.nome>=0?String(row[c.nome]||"").trim():"",
       cpf:c.cpf>=0?String(row[c.cpf]||"").trim():"",
       uf:c.uf>=0?String(row[c.uf]||"").trim():"",
+      municipio:c.municipio>=0?String(row[c.municipio]||"").trim():"",
       sindicato:c.sindicato>=0?String(row[c.sindicato]||"").trim():"",
       vinculo:c.vinculo>=0?String(row[c.vinculo]||"").trim():"",
       salario:c.salario>=0?parseMoeda(row[c.salario]):0,
@@ -876,6 +927,31 @@ const MOTIVOS_INDIVIDUAIS=["MÉRITO","MERITO","PROMOÇÃO","PROMOCAO","ESPONTANE
   "ENQUADRAMENTO","EQUIPARAÇÃO SALARIAL","EQUIPARACAO SALARIAL","INCORPORAÇÃO","INCORPORACAO",
   "ALTERAÇÃO DE CARGO","ALTERACAO DE CARGO","ALTERAÇÃO SALARIAL","ALTERACAO SALARIAL","PISO DA CATEGORIA"];
 function ehMotivoIndividual(m){ const M=stripAcc(m).toUpperCase(); return MOTIVOS_INDIVIDUAIS.some(x=>stripAcc(x).toUpperCase()===M); }
+
+// Classificação de tipo de aumento para o Hist Salarial
+const MOTIVOS_CCT=[
+  "DISSIDIO","DISSIIDIO","DISSÍDIO","CCT","CONVENCAO","CONVENÇÃO","REAJUSTE COLETIVO",
+  "REAJUSTE CCT","ACORDO COLETIVO","ACT","ACO","PISO SALARIAL","PISO CCT","COLETIVO",
+  "REAJUSTE SINDICAL","NORMATIVO","REAJUSTE NORMATIVO"
+];
+const MOTIVOS_MERITO_STR=["MÉRITO","MERITO"];
+const MOTIVOS_PROMO_STR=["PROMOÇÃO","PROMOCAO"];
+function classificarTipoAumento(motivo){
+  if(!motivo) return "OUTROS";
+  const M=stripAcc(String(motivo)).toUpperCase().trim();
+  if(MOTIVOS_CCT.some(x=>M.includes(stripAcc(x).toUpperCase()))) return "CCT";
+  if(MOTIVOS_MERITO_STR.some(x=>M.includes(stripAcc(x).toUpperCase()))) return "MERITO";
+  if(MOTIVOS_PROMO_STR.some(x=>M.includes(stripAcc(x).toUpperCase()))) return "PROMOCAO";
+  if(MOTIVOS_INDIVIDUAIS.some(x=>M.includes(stripAcc(x).toUpperCase()))) return "INDIVIDUAL";
+  return "OUTROS";
+}
+function labelTipo(tipo){
+  return {CCT:"CCT/Dissídio", MERITO:"Mérito", PROMOCAO:"Promoção", INDIVIDUAL:"Individual", OUTROS:"Outros"}[tipo]||tipo;
+}
+function tagTipo(tipo){
+  const map={CCT:"up", MERITO:"ok", PROMOCAO:"promo", INDIVIDUAL:"warn2", OUTROS:"no"};
+  return `<span class="tag ${map[tipo]||'no'}">${esc(labelTipo(tipo))}</span>`;
+}
 
 // Período do acordo (Período de / à do modelo): DATE(ano-1,mes,1) .. DATE(ano,mes,1)-1
 function periodoAcordo(acordo){
@@ -1250,12 +1326,28 @@ const COLS_CALC_BASE_FIM=[
   ["aplicacao","Aplicação",r=>fmtR(r.aplicacao),"num"],
   ["acao","Ação",cellAcao],
 ];
-// Constrói dinamicamente: fixas iniciais + extras escolhidas pelo usuário + fixas finais
+// Mapa label→spec para calc (fixas início + fim)
+function _mapaCalcFixas(){
+  const m={};
+  COLS_CALC_BASE_INICIO.concat(COLS_CALC_BASE_FIM).forEach(c=>{ m[c[1]]=c; });
+  return m;
+}
+// Constrói dinamicamente respeitando a ordem salva pelo usuário
 function colsCalcAtivas(){
   const extras=(ST.colunasExtras&&ST.colunasExtras.calc)||[];
-  const colsExtras=extras.map(h=>[
-    "x_"+h, h, r=>(r.raw&&r.raw[h]!=null)?String(r.raw[h]):""
-  ]);
+  const mapaFixas=_mapaCalcFixas();
+  const mapaExtras={};
+  extras.forEach(h=>{ mapaExtras[h]=["x_"+h,h,r=>(r.raw&&r.raw[h]!=null)?String(r.raw[h]):""]; });
+  const ordem=typeof ordemCompleta==="function"?ordemCompleta("calc"):null;
+  if(ordem&&ordem.length){
+    const result=[];
+    ordem.forEach(label=>{
+      if(mapaFixas[label]) result.push(mapaFixas[label]);
+      else if(mapaExtras[label]) result.push(mapaExtras[label]);
+    });
+    return result;
+  }
+  const colsExtras=Object.values(mapaExtras);
   return COLS_CALC_BASE_INICIO.concat(colsExtras, COLS_CALC_BASE_FIM);
 }
 const COLS_CALC = colsCalcAtivas(); // mantido para compatibilidade — não usar; sempre chame colsCalcAtivas()
@@ -1329,10 +1421,21 @@ function filtrarPend(tipo){
 ============================================================ */
 function colsConAtivas(){
   const extras=(ST.colunasExtras&&ST.colunasExtras.con)||[];
-  const colsExtras=extras.map(h=>[
-    "x_"+h, h, r=>(r.raw&&r.raw[h]!=null)?String(r.raw[h]):""
-  ]);
-  return [["acordoId","Acordo"]].concat(COLS_CALC_BASE_INICIO, colsExtras, COLS_CALC_BASE_FIM);
+  const mapaFixas={"Acordo":["acordoId","Acordo"]}; 
+  COLS_CALC_BASE_INICIO.concat(COLS_CALC_BASE_FIM).forEach(c=>{ mapaFixas[c[1]]=c; });
+  const mapaExtras={};
+  extras.forEach(h=>{ mapaExtras[h]=["x_"+h,h,r=>(r.raw&&r.raw[h]!=null)?String(r.raw[h]):""]; });
+  const ordem=typeof ordemCompleta==="function"?ordemCompleta("con"):null;
+  if(ordem&&ordem.length){
+    const result=[];
+    ordem.forEach(label=>{
+      if(mapaFixas[label]) result.push(mapaFixas[label]);
+      else if(mapaExtras[label]) result.push(mapaExtras[label]);
+    });
+    return result;
+  }
+  const colsExtras=Object.values(mapaExtras);
+  return [["acordoId","Acordo"]].concat(COLS_CALC_BASE_INICIO,colsExtras,COLS_CALC_BASE_FIM);
 }
 const COLS_CON=colsConAtivas(); // compatibilidade
 function todosResultados(){ let all=[]; for(const id in RESULTS) all=all.concat(RESULTS[id]); return all; }
@@ -1525,12 +1628,23 @@ const COLS_BASE_FIXAS=[["id_sonova","ID"],["nome","Nome"],["cpf","CPF"],["uf","U
   ["_adm","Admissão",r=>fmtD(r._adm)],["_des","Desligamento",r=>fmtD(r._des)]];
 function colsBaseAtivas(){
   const extras=(ST.colunasExtras&&ST.colunasExtras.base)||[];
-  // Não duplica coluna fixa
   const fixasSet=new Set(COLS_BASE_FIXAS.map(c=>stripAcc(c[1])));
-  const colsExtras=extras
-    .filter(h=>!fixasSet.has(stripAcc(h)))
-    .map(h=>["x_"+h, h, r=>(r._raw&&r._raw[h]!=null)?String(r._raw[h]):""]);
-  // Insere as extras depois da UF (posição 4)
+  // Mapa: label → spec da coluna fixa, ou spec gerada para extra
+  const mapaFixas={}; COLS_BASE_FIXAS.forEach(c=>{ mapaFixas[c[1]]=c; });
+  const mapaExtras={};
+  extras.filter(h=>!fixasSet.has(stripAcc(h)))
+    .forEach(h=>{ mapaExtras[h]=["x_"+h,h,r=>(r._raw&&r._raw[h]!=null)?String(r._raw[h]):""]; });
+  const ordem=typeof ordemCompleta==="function"?ordemCompleta("base"):null;
+  if(ordem&&ordem.length){
+    const result=[];
+    ordem.forEach(label=>{
+      if(mapaFixas[label]) result.push(mapaFixas[label]);
+      else if(mapaExtras[label]) result.push(mapaExtras[label]);
+    });
+    return result;
+  }
+  // fallback: extras depois da UF (posição 4)
+  const colsExtras=Object.values(mapaExtras);
   return COLS_BASE_FIXAS.slice(0,4).concat(colsExtras, COLS_BASE_FIXAS.slice(4));
 }
 function renderBase(){
@@ -1587,27 +1701,85 @@ function aplicarSortBase(rows){
   });
 }
 const COLS_HIST_FIXAS=[["id_sonova","ID"],["nome","Nome"],["data_alt","Alteração"],["data_hist","Histórica"],
-  ["motivo","Motivo"],["salario","Salário",r=>fmtR(r.salario),"num"],
+  ["motivo","Motivo"],
+  ["_tipo","Tipo",r=>tagTipo(classificarTipoAumento(r.motivo))],
+  ["salario","Salário",r=>fmtR(r.salario),"num"],
   ["variacao","Variação %",r=>r.variacao?r.variacao+"%":"","num"],["ano","Ano"]];
 function colsHistAtivas(){
   const extras=(ST.colunasExtras&&ST.colunasExtras.hist)||[];
   const fixasSet=new Set(COLS_HIST_FIXAS.map(c=>stripAcc(c[1])));
-  const colsExtras=extras
-    .filter(h=>!fixasSet.has(stripAcc(h)))
-    .map(h=>["x_"+h, h, r=>(r._raw&&r._raw[h]!=null)?String(r._raw[h]):""]);
+  const mapaFixas={}; COLS_HIST_FIXAS.forEach(c=>{ mapaFixas[c[1]]=c; });
+  const mapaExtras={};
+  extras.filter(h=>!fixasSet.has(stripAcc(h)))
+    .forEach(h=>{ mapaExtras[h]=["x_"+h,h,r=>(r._raw&&r._raw[h]!=null)?String(r._raw[h]):""]; });
+  const ordem=typeof ordemCompleta==="function"?ordemCompleta("hist"):null;
+  if(ordem&&ordem.length){
+    const result=[];
+    ordem.forEach(label=>{
+      if(mapaFixas[label]) result.push(mapaFixas[label]);
+      else if(mapaExtras[label]) result.push(mapaExtras[label]);
+    });
+    return result;
+  }
+  const colsExtras=Object.values(mapaExtras);
   return COLS_HIST_FIXAS.slice(0,2).concat(colsExtras, COLS_HIST_FIXAS.slice(2));
 }
 function renderHist(){
   document.getElementById("pillHist").textContent="Histórico: "+ST.hist.length;
   const termos=parseTermos(document.getElementById("histBusca").value);
+  const tipoFiltro=(document.getElementById("histTipo")||{}).value||"";
+  const anoFiltro=(document.getElementById("histAno")||{}).value||"";
+
+  // Popular select de anos dinamicamente
+  const anoSel=document.getElementById("histAno");
+  if(anoSel){
+    const anosDisp=[...new Set(ST.hist.map(h=>h.ano||"").filter(Boolean))].sort().reverse();
+    const curAno=anoSel.value;
+    anoSel.innerHTML='<option value="">Todos os anos</option>'+anosDisp.map(a=>`<option value="${esc(a)}" ${a===curAno?"selected":""}>${esc(a)}</option>`).join("");
+  }
+
   let rows=ST.hist.filter(h=>{
-    if(!termos.length) return true;
-    const partes=[h.id_sonova||"",h.nome||"",h.motivo||"",h.sindicato||"",
-                  String(h.salario||""),h.data_alt||"",h.data_hist||"",h.ano||""];
-    if(h._raw){ for(const k in h._raw){ const v=h._raw[k]; if(v!=null&&v!==""){ partes.push(String(v)); partes.push(k);} } }
-    const t=stripAcc(partes.join(" \u0001 "));
-    return termos.every(x=>t.includes(x));
+    // Filtro texto
+    if(termos.length){
+      const partes=[h.id_sonova||"",h.nome||"",h.motivo||"",h.sindicato||"",
+                    String(h.salario||""),h.data_alt||"",h.data_hist||"",h.ano||""];
+      if(h._raw){ for(const k in h._raw){ const v=h._raw[k]; if(v!=null&&v!==""){ partes.push(String(v)); partes.push(k);} } }
+      const t=stripAcc(partes.join(" \u0001 "));
+      if(!termos.every(x=>t.includes(x))) return false;
+    }
+    // Filtro tipo
+    if(tipoFiltro){
+      const tipo=classificarTipoAumento(h.motivo);
+      if(tipoFiltro==="INDIVIDUAL"){
+        // INDIVIDUAL = qualquer motivo individual exceto mérito e promoção
+        if(!["INDIVIDUAL","OUTROS"].includes(tipo)||tipo==="CCT") return false;
+        if(tipo==="MERITO"||tipo==="PROMOCAO") return false;
+      } else {
+        if(tipo!==tipoFiltro) return false;
+      }
+    }
+    // Filtro ano
+    if(anoFiltro && String(h.ano||"").trim()!==anoFiltro) return false;
+    return true;
   });
+
+  // KPIs por tipo
+  const contagem={CCT:0,MERITO:0,PROMOCAO:0,INDIVIDUAL:0,OUTROS:0};
+  ST.hist.forEach(h=>{ const t=classificarTipoAumento(h.motivo); contagem[t]=(contagem[t]||0)+1; });
+  const totalFiltrado=rows.length;
+  const kpisEl=document.getElementById("histKpis");
+  if(kpisEl){
+    const kpiItems=[
+      {v:ST.hist.length, l:"Total registros"},
+      {v:contagem.CCT, l:"CCT / Dissídio", accent:true},
+      {v:contagem.MERITO, l:"Mérito"},
+      {v:contagem.PROMOCAO, l:"Promoção"},
+      {v:contagem.INDIVIDUAL+contagem.OUTROS, l:"Individual / Outros"},
+      {v:totalFiltrado, l:"Exibindo (filtro)"},
+    ];
+    kpisEl.innerHTML=kpiItems.map(k=>`<div class="kpi${k.accent?' accent':''}"><div class="v">${k.v.toLocaleString("pt-BR")}</div><div class="l">${k.l}</div></div>`).join("");
+  }
+
   rows=aplicarSortHist(rows);
   const cols=colsHistAtivas();
   const tbl=document.getElementById("tblHist");
@@ -1617,12 +1789,38 @@ function renderHist(){
     return `<th onclick="clicarSort('hists','${c[0]}','tblHist')">${esc(c[1])}<span class="arr">${arr}</span></th>`;
   }).join("")+"</tr>";
   const tb=tbl.querySelector("tbody");
-  tb.innerHTML=rows.length?rows.map(r=>"<tr>"+cols.map(c=>{
-    const v=c[2]?c[2](r):r[c[0]];
-    return `<td class="${c[3]||''}">${v==null?"":esc(v)}</td>`;
-  }).join("")+"</tr>").join("")
-    :`<tr><td colspan="${cols.length}" class="empty">Sem histórico importado.</td></tr>`;
+  tb.innerHTML=rows.length?rows.map(r=>{
+    const tipo=classificarTipoAumento(r.motivo);
+    const rowClass=tipo==="CCT"?"rowCCT":tipo==="MERITO"?"rowMerito":tipo==="PROMOCAO"?"rowPromo":"";
+    return `<tr class="${rowClass}">`+cols.map(c=>{
+      const v=c[2]?c[2](r):r[c[0]];
+      // coluna tipo retorna HTML — não escapar
+      const raw_html = c[0]==='_tipo';
+      return `<td class="${c[3]||''}">${raw_html?(v==null?"":v):(v==null?"":esc(String(v)))}</td>`;
+    }).join("")+"</tr>";
+  }).join("")
+    :`<tr><td colspan="${cols.length}" class="empty">Sem registros para o filtro selecionado.</td></tr>`;
   LAST_ROWS["hists"]=rows;
+}
+function exportarHist(fmt){
+  const rows=LAST_ROWS["hists"]||[];
+  const extras=(ST.colunasExtras&&ST.colunasExtras.hist)||[];
+  const fixasSet=new Set(COLS_HIST_FIXAS.map(c=>stripAcc(c[1])));
+  const extrasSpec=extras.filter(h=>!fixasSet.has(stripAcc(h)))
+    .map(h=>({h, v:r=>(r._raw&&r._raw[h]!=null)?r._raw[h]:""}));
+  const spec=[
+    {h:"ID",v:r=>r.id_sonova},{h:"Nome",v:r=>r.nome},
+    {h:"Alteração",v:r=>r.data_alt},{h:"Histórica",v:r=>r.data_hist},
+    {h:"Motivo",v:r=>r.motivo},{h:"Tipo",v:r=>labelTipo(classificarTipoAumento(r.motivo))},
+    ...extrasSpec,
+    {h:"Salário",v:r=>r.salario,num:true},{h:"Variação %",v:r=>r.variacao||""},
+    {h:"Ano",v:r=>r.ano},
+  ];
+  const head=spec.map(s=>s.h);
+  const body=rows.map(r=>spec.map(s=>s.v(r)));
+  const matriz=[head,...body];
+  if(fmt==="csv"){ exportarCSV(matriz,"historico_salarial"); return; }
+  exportarXLSX(matriz,"historico_salarial",[]);
 }
 function aplicarSortHist(rows){
   const st=sortState["hists"]; if(!st||!st.key) return rows;
@@ -1916,74 +2114,185 @@ function aplicarSugestoesCCT(sug, hint){
 }
 
 /* ============================================================
-   SELETOR DE COLUNAS  (Cálculo CCT e Consolidado)
+   SELETOR DE COLUNAS — visibilidade + reordenação drag-and-drop
 ============================================================ */
-// Cabeçalhos já usados pelas colunas fixas — ficam fora do seletor
 const COLS_FIXAS_LABELS=new Set(["ID","Nome","Sindicato","UF","Eleg.","Admissão/Início","Avos",
   "Aum. período","Sal. Atual","Base","%","Sal. c/ Acordo","Sal. Final","Aplicação","Ação","Acordo",
   "CPF","Vínculo","Salário","Admissão","Desligamento",
-  "Alteração","Histórica","Motivo","Variação %","Ano"]);
-// Sugestões prontas — se estas colunas existirem na planilha, mostra em destaque
+  "Alteração","Histórica","Motivo","Variação %","Ano","Tipo"]);
 const COLS_SUGERIDAS=["Função","Gestor","CDC","Estabelecimento","Empresa","Categoria Profissional - Nome",
   "Categoria Profissional","Matrícula ADP","CPF Empregado","Vínculo Empregatício - Nome",
   "Função - Nome","Chefia Imediata - Nome","Data da Admissão"];
 
+// Ordem padrão das colunas fixas por contexto
+const COLS_FIXAS_CTX={
+  calc:["UF","Data da Admissão","Função - Nome","Chefia Imediata - Nome","Eleg.","Admissão/Início","Avos","Aum. período","Sal. Atual","Base","%","Sal. c/ Acordo","Sal. Final","Aplicação","Ação"],
+  con: ["Acordo","UF","Data da Admissão","Função - Nome","Chefia Imediata - Nome","Eleg.","Admissão/Início","Avos","Aum. período","Sal. Atual","Base","%","Sal. c/ Acordo","Sal. Final","Aplicação","Ação"],
+  base:["ID","Nome","CPF","UF","Sindicato","Vínculo","Salário","Admissão","Desligamento"],
+  hist:["ID","Nome","Alteração","Histórica","Motivo","Tipo","Salário","Variação %","Ano"],
+};
+
 function colunasDisponiveis(ctx){
-  // base usa cadHeaders; hist usa histHeaders; calc/con usam cadHeaders
-  const fonte = (ctx==="hist")?(ST.histHeaders||[]):(ST.cadHeaders||[]);
+  const fonte=(ctx==="hist")?(ST.histHeaders||[]):(ST.cadHeaders||[]);
   if(fonte && fonte.length) return fonte.slice();
-  // fallback: infere do primeiro registro do respectivo dataset
-  const ds = (ctx==="hist")?ST.hist:ST.cadastro;
+  const ds=(ctx==="hist")?ST.hist:ST.cadastro;
   if(ds && ds[0] && ds[0]._raw) return Object.keys(ds[0]._raw);
   return [];
 }
 function tituloCtx(ctx){
   return ({calc:"Cálculo CCT",con:"Consolidado",base:"Base de Dados",hist:"Hist Salarial"})[ctx]||ctx;
 }
+// Ordem das colunas fixas respeitando colOrdem salvo
+function ordemFixas(ctx){
+  const padrao=COLS_FIXAS_CTX[ctx]||[];
+  const salvo=(ST.colOrdem&&ST.colOrdem[ctx])||[];
+  if(!salvo.length) return padrao.slice();
+  const novas=padrao.filter(c=>!salvo.includes(c));
+  return salvo.filter(c=>padrao.includes(c)).concat(novas);
+}
+// Ordem completa: fixas + extras ativas na sequência salva
+function ordemCompleta(ctx){
+  const fixas=ordemFixas(ctx);
+  const extras=(ST.colunasExtras&&ST.colunasExtras[ctx])||[];
+  const salvo=(ST.colOrdem&&ST.colOrdem[ctx])||[];
+  const ordemSalvo=salvo.filter(c=>fixas.includes(c)||extras.includes(c));
+  const faltando=[...fixas.filter(c=>!ordemSalvo.includes(c)),...extras.filter(c=>!salvo.includes(c))];
+  return [...ordemSalvo,...faltando];
+}
 function abrirSeletorColunas(ctx){
   ST.colunasExtras=ST.colunasExtras||{calc:[],con:[],base:[],hist:[],_touched:{calc:false,con:false,base:false,hist:false}};
-  const ativas=new Set(ST.colunasExtras[ctx]||[]);
+  ST.colOrdem=ST.colOrdem||{calc:[],con:[],base:[],hist:[]};
   const disponiveis=colunasDisponiveis(ctx).filter(h=>!COLS_FIXAS_LABELS.has(h));
   if(!disponiveis.length){
-    const nomeArq = (ctx==="hist")?"Hist. Salarial":"Base de Dados";
-    alert("Ainda não há dados importados para "+tituloCtx(ctx)+" — ou o arquivo foi importado antes da v2.4. Reimporte “"+nomeArq+"” para habilitar o seletor.");
+    const nomeArq=(ctx==="hist")?"Hist. Salarial":"Base de Dados";
+    alert("Ainda não há dados importados para "+tituloCtx(ctx)+" — ou o arquivo foi importado antes da v2.4. Reimporte \u201c"+nomeArq+"\u201d para habilitar o seletor.");
     return;
   }
+  window._selColCtx=ctx;
+  document.getElementById("modal").innerHTML=`
+    <span class="close" onclick="fecharModal()">×</span>
+    <h3>Colunas · ${esc(tituloCtx(ctx))}</h3>
+    <div class="reorder-tabs">
+      <div class="reorder-tab active" id="rtab-vis" onclick="trocarAbaModal('vis')">✓ Visibilidade</div>
+      <div class="reorder-tab" id="rtab-ord" onclick="trocarAbaModal('ord')">⠿ Ordem</div>
+    </div>
+    <div id="modal-vis">${htmlAbaVisibilidade(ctx,disponiveis)}</div>
+    <div id="modal-ord" style="display:none">${htmlAbaOrdem(ctx,disponiveis)}</div>
+    <div class="row-flex" style="margin-top:14px">
+      <button class="btn adv" onclick="salvarSeletorColunas()">✔ Aplicar</button>
+      <button class="btn ghost" onclick="resetarOrdem()">↺ Resetar ordem</button>
+      <button class="btn aux" onclick="fecharModal()">Cancelar</button>
+    </div>`;
+  document.getElementById("modalBg").classList.add("on");
+  iniciarDragDrop();
+}
+function trocarAbaModal(aba){
+  document.getElementById("modal-vis").style.display=aba==="vis"?"":"none";
+  document.getElementById("modal-ord").style.display=aba==="ord"?"":"none";
+  document.getElementById("rtab-vis").classList.toggle("active",aba==="vis");
+  document.getElementById("rtab-ord").classList.toggle("active",aba==="ord");
+  if(aba==="ord") iniciarDragDrop();
+}
+function htmlAbaVisibilidade(ctx,disponiveis){
+  const ativas=new Set(ST.colunasExtras[ctx]||[]);
   const sugeridasSet=new Set(COLS_SUGERIDAS.map(x=>x.toLowerCase()));
-  const sug=[], out=[];
+  const sug=[],out=[];
   disponiveis.forEach(h=>{ (sugeridasSet.has(h.toLowerCase())?sug:out).push(h); });
-
-  const bloco=(titulo, arr)=>arr.length?`
+  const bloco=(titulo,arr)=>arr.length?`
     <div style="margin-top:12px"><b style="color:var(--azul-esc)">${esc(titulo)}</b></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:4px 14px;margin-top:6px">
       ${arr.map(h=>`<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer">
         <input type="checkbox" data-col="${esc(h)}" ${ativas.has(h)?"checked":""}> ${esc(h)}
       </label>`).join("")}
-    </div>` : "";
-
-  window._selColCtx=ctx;
-  document.getElementById("modal").innerHTML=`
-    <span class="close" onclick="fecharModal()">×</span>
-    <h3>Colunas visíveis · ${esc(tituloCtx(ctx))}</h3>
-    <div style="color:var(--txt2);font-size:12px">
-      Escolha quais colunas do arquivo aparecem na tabela e nas exportações.
-      As fixas ficam sempre visíveis.
-    </div>
+    </div>`:"";
+  return `<div style="color:var(--txt2);font-size:12px">Escolha quais colunas extras aparecem. As fixas ficam sempre visíveis.</div>
     <div class="row-flex" style="margin-top:10px;gap:6px">
       <button class="btn ghost" onclick="marcarTodasColunas(true)">Marcar todas</button>
       <button class="btn ghost" onclick="marcarTodasColunas(false)">Limpar</button>
       <button class="btn ghost" onclick="marcarSugeridas()">Só sugeridas</button>
-      <span class="pill">${disponiveis.length} colunas disponíveis</span>
+      <span class="pill">${disponiveis.length} extras disponíveis</span>
     </div>
-    <div id="selColBox" style="max-height:60vh;overflow:auto;padding-right:6px">
-      ${bloco("Sugeridas (mais usadas)", sug)}
-      ${bloco("Demais colunas do arquivo", out)}
-    </div>
-    <div class="row-flex" style="margin-top:14px">
-      <button class="btn adv" onclick="salvarSeletorColunas()">✔ Aplicar</button>
-      <button class="btn aux" onclick="fecharModal()">Cancelar</button>
+    <div id="selColBox" style="max-height:48vh;overflow:auto;padding-right:6px">
+      ${bloco("Sugeridas (mais usadas)",sug)}${bloco("Demais colunas do arquivo",out)}
     </div>`;
-  document.getElementById("modalBg").classList.add("on");
+}
+function htmlAbaOrdem(ctx,disponiveis){
+  const extras=(ST.colunasExtras[ctx]||[]);
+  const fixas=COLS_FIXAS_CTX[ctx]||[];
+  const todas=[...fixas,...extras.filter(e=>!fixas.includes(e))];
+  const ordem=ordemCompleta(ctx);
+  const ordenadas=ordem.filter(c=>todas.includes(c));
+  const resto=todas.filter(c=>!ordem.includes(c));
+  const final=[...ordenadas,...resto];
+  return `<div style="color:var(--txt2);font-size:12px;margin-bottom:10px">
+    Arraste ⠿ para reordenar. A ordem é salva e aplicada na tabela e na exportação.
+    <br><span class="reorder-badge fixed" style="display:inline-block;margin-top:4px">fixa</span> = sempre presente &nbsp;·&nbsp;
+    <span class="reorder-badge" style="display:inline-block;background:var(--hdr-tab);color:var(--hdr-txt)">extra</span> = depende da aba Visibilidade.
+  </div>
+  <ul class="reorder-list" id="reorderList">
+    ${final.map(c=>{const ehFixa=fixas.includes(c);
+      return `<li class="reorder-item" data-col="${esc(c)}" draggable="true">
+        <span class="reorder-handle">⠿</span>
+        <span style="flex:1">${esc(c)}</span>
+        <span class="reorder-badge ${ehFixa?"fixed":""}">${ehFixa?"fixa":"extra"}</span>
+      </li>`;}).join("")}
+  </ul>`;
+}
+let _dragSrc=null,_touchClone=null,_touchOriginRect=null;
+function iniciarDragDrop(){
+  const list=document.getElementById("reorderList"); if(!list) return;
+  list.querySelectorAll(".reorder-item").forEach(item=>{
+    item.addEventListener("dragstart",e=>{
+      _dragSrc=item; item.classList.add("dragging");
+      e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain",item.dataset.col);
+    });
+    item.addEventListener("dragend",()=>{
+      item.classList.remove("dragging");
+      list.querySelectorAll(".reorder-item").forEach(i=>i.classList.remove("drop-target"));
+    });
+    item.addEventListener("dragover",e=>{
+      e.preventDefault(); e.dataTransfer.dropEffect="move";
+      list.querySelectorAll(".reorder-item").forEach(i=>i.classList.remove("drop-target"));
+      if(item!==_dragSrc) item.classList.add("drop-target");
+    });
+    item.addEventListener("drop",e=>{
+      e.preventDefault(); if(!_dragSrc||_dragSrc===item) return;
+      const items=[...list.querySelectorAll(".reorder-item")];
+      const si=items.indexOf(_dragSrc),ti=items.indexOf(item);
+      if(si<ti) list.insertBefore(_dragSrc,item.nextSibling); else list.insertBefore(_dragSrc,item);
+      item.classList.remove("drop-target");
+    });
+    item.addEventListener("pointerdown",e=>{
+      if(e.pointerType==="mouse") return;
+      e.preventDefault(); _dragSrc=item; item.classList.add("dragging");
+      _touchOriginRect=item.getBoundingClientRect();
+      _touchClone=item.cloneNode(true);
+      _touchClone.style.cssText=`position:fixed;left:${_touchOriginRect.left}px;top:${_touchOriginRect.top}px;width:${_touchOriginRect.width}px;opacity:.8;pointer-events:none;z-index:999;`;
+      document.body.appendChild(_touchClone);
+      item.setPointerCapture(e.pointerId);
+    });
+    item.addEventListener("pointermove",e=>{
+      if(!_touchClone||e.pointerType==="mouse") return;
+      _touchClone.style.top=(e.clientY-_touchOriginRect.height/2)+"px";
+      const items=[...list.querySelectorAll(".reorder-item")];
+      items.forEach(i=>i.classList.remove("drop-target"));
+      const over=items.find(i=>{ if(i===_dragSrc) return false;
+        const r=i.getBoundingClientRect(); return e.clientY>=r.top&&e.clientY<=r.bottom; });
+      if(over) over.classList.add("drop-target");
+    });
+    item.addEventListener("pointerup",e=>{
+      if(e.pointerType==="mouse") return;
+      if(_touchClone){ _touchClone.remove(); _touchClone=null; }
+      item.classList.remove("dragging");
+      const items=[...list.querySelectorAll(".reorder-item")];
+      const tgt=items.find(i=>i.classList.contains("drop-target"));
+      if(tgt&&_dragSrc){
+        const si=items.indexOf(_dragSrc),ti=items.indexOf(tgt);
+        if(si<ti) list.insertBefore(_dragSrc,tgt.nextSibling); else list.insertBefore(_dragSrc,tgt);
+      }
+      items.forEach(i=>i.classList.remove("drop-target")); _dragSrc=null;
+    });
+  });
 }
 function marcarTodasColunas(v){
   document.querySelectorAll("#selColBox input[type=checkbox]").forEach(cb=>{cb.checked=!!v;});
@@ -1994,6 +2303,15 @@ function marcarSugeridas(){
     cb.checked=sugSet.has((cb.dataset.col||"").toLowerCase());
   });
 }
+function resetarOrdem(){
+  const ctx=window._selColCtx; if(!ctx) return;
+  ST.colOrdem=ST.colOrdem||{calc:[],con:[],base:[],hist:[]};
+  ST.colOrdem[ctx]=[];
+  salvar();
+  const disponiveis=colunasDisponiveis(ctx).filter(h=>!COLS_FIXAS_LABELS.has(h));
+  document.getElementById("modal-ord").innerHTML=htmlAbaOrdem(ctx,disponiveis);
+  iniciarDragDrop();
+}
 function salvarSeletorColunas(){
   const ctx=window._selColCtx; if(!ctx) return;
   const marcadas=[...document.querySelectorAll("#selColBox input[type=checkbox]:checked")].map(cb=>cb.dataset.col);
@@ -2001,6 +2319,9 @@ function salvarSeletorColunas(){
   ST.colunasExtras[ctx]=marcadas;
   if(typeof ST.colunasExtras._touched!=="object") ST.colunasExtras._touched={calc:false,con:false,base:false,hist:false};
   ST.colunasExtras._touched[ctx]=true;
+  ST.colOrdem=ST.colOrdem||{calc:[],con:[],base:[],hist:[]};
+  const list=document.getElementById("reorderList");
+  if(list) ST.colOrdem[ctx]=[...list.querySelectorAll(".reorder-item")].map(li=>li.dataset.col);
   salvar();
   fecharModal();
   atualizarContadorColunas();
@@ -2011,7 +2332,7 @@ function salvarSeletorColunas(){
 }
 function atualizarContadorColunas(){
   const ce=ST.colunasExtras||{};
-  const c=(ce.calc||[]).length, co=(ce.con||[]).length, b=(ce.base||[]).length, h=(ce.hist||[]).length;
+  const c=(ce.calc||[]).length,co=(ce.con||[]).length,b=(ce.base||[]).length,h=(ce.hist||[]).length;
   const upd=(id,n)=>{ const e=document.getElementById(id); if(e) e.textContent="🔧 Colunas visíveis"+(n?` (+${n})`:""); };
   upd("btnColCalc",c); upd("btnColCon",co); upd("btnColBase",b); upd("btnColHist",h);
 }
