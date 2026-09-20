@@ -81,6 +81,23 @@ tr.rowPara td:first-child::before{content:"★ ";color:var(--vinho);font-weight:
 tr.rowCCT td{box-shadow:inset 3px 0 0 var(--azul)}
 tr.rowMerito td{box-shadow:inset 3px 0 0 var(--verde)}
 tr.rowPromo.rowPromo td{box-shadow:inset 3px 0 0 var(--vinho)}
+/* Seleção manual persistente: clique para marcar; clique novamente para retirar. */
+table.data tbody tr.rowSelected td{
+  background:#DDF1FB !important;
+  color:#003C64 !important;
+  font-weight:500;
+  box-shadow:inset 0 2px 0 #0083CA,inset 0 -2px 0 #0083CA !important
+}
+table.data tbody tr.rowSelected td:first-child{
+  border-left:4px solid #0083CA;
+  padding-left:7px
+}
+table.data tbody tr.rowSelected td:first-child::before{
+  content:"✓ ";
+  color:#0083CA;
+  font-weight:700
+}
+table.data tbody tr.rowSelected td:last-child{border-right:2px solid #0083CA}
 .tag.para{background:var(--vinho)}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--txt2);margin:6px 2px 10px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -143,7 +160,7 @@ input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;co
 <div class="appbar">
   <div>
     <h1>Aplicador de Dissídio / CCT</h1>
-    <div class="sub"><b>v2.9</b></div>
+    <div class="sub"><b>v2.10</b></div>
   </div>
   <div class="logo">Igarapé Digital</div>
   <svg class="wave" viewBox="0 0 1200 20" preserveAspectRatio="none"><path d="M0 12 Q150 2 300 12 T600 12 T900 12 T1200 12 V20 H0 Z" fill="#fff"/></svg>
@@ -521,6 +538,35 @@ function salvarLocalStorage(obj){
 }
 let sortState={};      // por tabela
 let scatterChart=null;
+// Uma linha selecionada por tabela. A seleção sobrevive a filtros, ordenação e
+// redesenho enquanto o registro continuar visível.
+let selecaoLinhas={};
+let timerCliqueLinha=null;
+
+function chaveSelecaoLinha(ctx,r,i){
+  if(ctx==="calc"||ctx==="con") return [r.acordoId||"",r.id||""].join("|");
+  if(ctx==="base") return String(r.id_sonova||i);
+  if(ctx==="hists") return [r.id_sonova||"",r.data_hist||"",r.data_alt||"",r.motivo||"",r.salario||""].join("|");
+  if(ctx==="aplicado") return String(r.id||i);
+  return String(i);
+}
+function classeLinhaSelecionada(ctx,chave){
+  return selecaoLinhas[ctx]===String(chave)?" rowSelected":"";
+}
+function cliqueSelecionarLinha(ev,tr,ctx){
+  if(ev.target.closest("input,button,a,select,textarea,label")) return;
+  clearTimeout(timerCliqueLinha);
+  if(ev.detail!==1) return;
+  timerCliqueLinha=setTimeout(()=>{
+    const chave=String(tr.dataset.rowKey||"");
+    const retirar=selecaoLinhas[ctx]===chave;
+    selecaoLinhas[ctx]=retirar?null:chave;
+    const corpo=tr.closest("tbody");
+    if(corpo) corpo.querySelectorAll("tr.rowSelected").forEach(x=>x.classList.remove("rowSelected"));
+    if(!retirar) tr.classList.add("rowSelected");
+  },220);
+}
+function cancelarCliqueLinha(){ clearTimeout(timerCliqueLinha); timerCliqueLinha=null; }
 
 /* ============================================================
    MAPA CANÔNICO DE COLUNAS  (synonym map -> campo)
@@ -1562,7 +1608,9 @@ function desenharTabela(tblId, cols, rows, ctx){
     else if(r.promo&&r.promo.tem) cls="rowPromo";
     if(r.avoOk===false && !r.conferido) cls+=" rowAvoBad";
     if(r.paradigma) cls+=" rowPara";
-    return `<tr class="${cls}" ondblclick='abrirDetalhe(${i},"${ctx}")'>`+cols.map(c=>{
+    const chave=chaveSelecaoLinha(ctx,r,i);
+    cls+=classeLinhaSelecionada(ctx,chave);
+    return `<tr class="${cls}" data-row-key="${esc(chave)}" onclick="cliqueSelecionarLinha(event,this,'${ctx}')" ondblclick='cancelarCliqueLinha();abrirDetalhe(${i},"${ctx}")'>`+cols.map(c=>{
     const val=c[2]?c[2](r):r[c[0]];
     return `<td class="${c[3]||''}">${val==null?"":val}</td>`;
   }).join("")+"</tr>"; }).join("");
@@ -1719,10 +1767,13 @@ function renderBase(){
   }).join("")+"</tr>";
   const tb=tbl.querySelector("tbody");
   if(!rows.length){ tb.innerHTML=`<tr><td colspan="${cols.length}" class="empty">Sem dados.</td></tr>`; LAST_ROWS["base"]=rows; return; }
-  tb.innerHTML=rows.map(r=>"<tr>"+cols.map(c=>{
+  tb.innerHTML=rows.map((r,i)=>{
+    const chave=chaveSelecaoLinha("base",r,i);
+    const cls=classeLinhaSelecionada("base",chave).trim();
+    return `<tr class="${cls}" data-row-key="${esc(chave)}" onclick="cliqueSelecionarLinha(event,this,'base')">`+cols.map(c=>{
     const val=c[2]?c[2](r):r[c[0]];
     return `<td class="${c[3]||''}">${val==null?"":esc(val)}</td>`;
-  }).join("")+"</tr>").join("");
+  }).join("")+"</tr>"; }).join("");
   LAST_ROWS["base"]=rows;
 }
 // Sort específico para Base (sem r.raw padronizado — usa _raw)
@@ -1831,10 +1882,11 @@ function renderHist(){
     return `<th onclick="clicarSort('hists','${c[0]}','tblHist')">${esc(c[1])}<span class="arr">${arr}</span></th>`;
   }).join("")+"</tr>";
   const tb=tbl.querySelector("tbody");
-  tb.innerHTML=rows.length?rows.map(r=>{
+  tb.innerHTML=rows.length?rows.map((r,i)=>{
     const tipo=classificarTipoAumento(r.motivo);
-    const rowClass=tipo==="CCT"?"rowCCT":tipo==="MERITO"?"rowMerito":tipo==="PROMOCAO"?"rowPromo":"";
-    return `<tr class="${rowClass}">`+cols.map(c=>{
+    const chave=chaveSelecaoLinha("hists",r,i);
+    const rowClass=(tipo==="CCT"?"rowCCT":tipo==="MERITO"?"rowMerito":tipo==="PROMOCAO"?"rowPromo":"")+classeLinhaSelecionada("hists",chave);
+    return `<tr class="${rowClass}" data-row-key="${esc(chave)}" onclick="cliqueSelecionarLinha(event,this,'hists')">`+cols.map(c=>{
       const v=c[2]?c[2](r):r[c[0]];
       // coluna tipo retorna HTML — não escapar
       const raw_html = c[0]==='_tipo';
@@ -2410,7 +2462,9 @@ function renderAplicado(){
   if(!ST.acordos.length){ tb.innerHTML=`<tr><td colspan="${COLS_APLICADO.length}" class="empty">Nenhum acordo cadastrado ainda.</td></tr>`;
     document.getElementById("apKpis").innerHTML=""; return; }
   tb.innerHTML=ST.acordos.map((a,i)=>{
-    return `<tr ondblclick="editarAcordo(${i});setTab('acordo')">`+COLS_APLICADO.map((c)=>{
+    const chave=chaveSelecaoLinha("aplicado",a,i);
+    const cls=classeLinhaSelecionada("aplicado",chave).trim();
+    return `<tr class="${cls}" data-row-key="${esc(chave)}" onclick="cliqueSelecionarLinha(event,this,'aplicado')" ondblclick="cancelarCliqueLinha();editarAcordo(${i});setTab('acordo')">`+COLS_APLICADO.map((c)=>{
       const v=c.v(a,i);
       let disp;
       if(c.pct)      disp = (v===""||v==null)?"":fmtP(v);
