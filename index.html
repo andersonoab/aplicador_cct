@@ -154,13 +154,67 @@ input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;co
 .reorder-tabs{display:flex;gap:0;border-bottom:2px solid var(--azul);margin-bottom:14px}
 .reorder-tab{padding:7px 18px;cursor:pointer;font-size:13px;color:var(--txt2);border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0}
 .reorder-tab.active{background:var(--hdr-tab);color:var(--hdr-txt);border-color:var(--borda);font-weight:500}
+/* ---------- v2.11 · Mapa quadrado do Brasil (tile map) ---------- */
+.mapa-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.mapa-top h3{margin:0}
+.seg{display:inline-flex;border:1px solid var(--borda);border-radius:8px;overflow:hidden}
+.seg button{border:none;background:#fff;color:var(--txt2);font-family:'Roboto';font-size:12.5px;padding:7px 12px;cursor:pointer;border-right:1px solid var(--borda)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--azul);color:#fff;font-weight:500}
+.seg button:focus-visible{outline:2px solid var(--vinho);outline-offset:-2px}
+.mapa-wrap{display:grid;grid-template-columns:minmax(260px,440px) 1fr;gap:22px;align-items:start}
+@media (max-width:860px){.mapa-wrap{grid-template-columns:1fr}}
+.tilemap{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;width:100%}
+.tile{aspect-ratio:1/1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .12s;position:relative;border:1px solid rgba(0,60,100,.08)}
+.tile:hover{transform:scale(1.06);z-index:2;box-shadow:0 4px 14px rgba(0,60,100,.22)}
+.tile:focus-visible{outline:3px solid var(--vinho);outline-offset:1px}
+.tile .uf{font-family:'Rufina',serif;font-weight:700;font-size:clamp(12px,2.1vw,17px);line-height:1}
+.tile .val{font-size:clamp(8px,1vw,10px);margin-top:3px;opacity:.95;white-space:nowrap}
+.tile.vazio{background:#F3F5F7;color:#A8B3BD;cursor:default;border-color:#E6EAEE}
+.tile.vazio:hover{transform:none;box-shadow:none}
+.tile.sel{outline:3px solid var(--vinho);outline-offset:1px}
+.mapa-legenda{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2);margin:10px 0 4px}
+.mapa-legenda .bar{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,#C9E1F1,#0083CA 60%,#003C64)}
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.rank li{display:grid;grid-template-columns:34px 1fr 118px;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;padding:3px 6px;border-radius:6px}
+.rank li:hover{background:var(--hdr-tab)}
+.rank li.sel{background:#FBF5F8;box-shadow:inset 3px 0 0 var(--vinho)}
+.rank .u{font-family:'Rufina';font-weight:700;color:var(--azul-esc)}
+.rank .b{height:10px;border-radius:5px;background:var(--azul);min-width:2px}
+.rank .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--txt)}
+.ufchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#FBF5F8;color:var(--vinho);border:1px solid #E7C9D6;border-radius:14px;padding:3px 10px;margin-left:8px;font-family:'Roboto';font-weight:400}
+.ufchip a{cursor:pointer;color:var(--vinho);text-decoration:none;font-weight:700}
+/* ---------- v2.11 · Modo apresentação (duplo-clique) ---------- */
+.modal.apres{max-width:1180px;width:96%;max-height:94vh;padding:0;border-top:none;display:flex;flex-direction:column}
+.apres:fullscreen{max-width:none;width:100vw;height:100vh;max-height:none;border-radius:0;overflow:auto}
+.apres-hdr{background:var(--azul);color:#fff;padding:18px 24px 22px;position:relative;overflow:hidden;flex-shrink:0}
+.apres-hdr .t{font-family:'Rufina',serif;font-size:26px;font-weight:700;line-height:1.1;margin:0}
+.apres-hdr .s{font-size:13px;opacity:.92;margin-top:4px}
+.apres-hdr .acts{position:absolute;top:14px;right:18px;display:flex;gap:6px;align-items:center}
+.apres-hdr .acts button{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:6px;padding:6px 11px;font-family:'Roboto';font-size:12.5px;cursor:pointer}
+.apres-hdr .acts button:hover{background:rgba(255,255,255,.26)}
+.apres-hdr .acts .nav{font-size:12px;opacity:.9;padding:0 4px}
+.apres-hdr .wave{height:12px}
+.apres-body{padding:18px 24px;overflow:auto;flex:1}
+.apres-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:16px}
+.apres-kpis .kpi{min-width:0}
+.apres-kpis .kpi .v{font-size:21px}
+.apres-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.apres-grid{grid-template-columns:1fr}}
+.apres-grid .card{margin-bottom:0}
+.chartbox{position:relative;height:270px}
+.apres:fullscreen .chartbox{height:34vh}
+.apres-foot{padding:9px 24px;border-top:1px solid var(--borda);font-size:11px;color:var(--txt2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0}
+.apres .kv{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:4px}
+.apres table.data td,.apres table.data th{font-size:12px}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}.tile:hover{transform:none}}
 </style>
 </head>
 <body>
 <div class="appbar">
   <div>
     <h1>Aplicador de Dissídio / CCT</h1>
-    <div class="sub"><b>v2.10</b></div>
+    <div class="sub"><b>v2.11</b></div>
   </div>
   <div class="logo">Igarapé Digital</div>
   <svg class="wave" viewBox="0 0 1200 20" preserveAspectRatio="none"><path d="M0 12 Q150 2 300 12 T600 12 T900 12 T1200 12 V20 H0 Z" fill="#fff"/></svg>
@@ -194,6 +248,26 @@ input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;co
 <!-- ================= PAINEL ================= -->
 <div class="pane active" id="pane-painel">
   <div class="kpis" id="kpis"></div>
+  <div class="card" id="cardMapa">
+    <div class="mapa-top">
+      <h3>Mapa do Brasil por UF<span id="mapaChip"></span></h3>
+      <div class="seg" id="mapaMetrica" role="group" aria-label="Métrica do mapa">
+        <button data-m="impacto" class="on" onclick="setMapaMetrica('impacto')">Impacto R$</button>
+        <button data-m="pop" onclick="setMapaMetrica('pop')">População</button>
+        <button data-m="comAum" onclick="setMapaMetrica('comAum')">Com aumento</button>
+        <button data-m="nAcordos" onclick="setMapaMetrica('nAcordos')">Acordos</button>
+      </div>
+    </div>
+    <div id="mapaVazio" class="empty" style="display:none">Cadastre acordos e importe a base para ver o mapa.</div>
+    <div class="mapa-wrap" id="mapaWrap">
+      <div>
+        <div class="tilemap" id="tileMap"></div>
+        <div class="mapa-legenda"><span id="legMin">0</span><span class="bar"></span><span id="legMax">0</span></div>
+      </div>
+      <div id="mapaSide"></div>
+    </div>
+    <div class="hint">Clique em um estado para filtrar a tabela de acordos abaixo · <b>duplo-clique</b> abre a visão de apresentação (← → navegam entre estados, Esc fecha).</div>
+  </div>
   <div class="card">
     <h3>Como usar</h3>
     <div style="font-size:13px;line-height:1.7;color:var(--txt2)">
@@ -204,7 +278,8 @@ input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;co
     </div>
   </div>
   <div class="card">
-    <h3>Impacto financeiro por acordo</h3>
+    <h3>Impacto financeiro por acordo<span id="painelChip"></span></h3>
+    <div class="hint" style="margin:-6px 0 10px">Duplo-clique em um acordo abre a visão de apresentação com piso, teto, avos e composição.</div>
     <div id="painelImpacto" class="empty">Cadastre acordos e importe a base para ver o impacto.</div>
   </div>
 </div>
@@ -437,6 +512,10 @@ input.baseInp.editado{border-color:#F0C674;background:#FFF6E9;font-weight:500;co
 
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)fecharModal()">
   <div class="modal" id="modal"></div>
+</div>
+<!-- v2.11 · Modo apresentação (duplo-clique no mapa / acordo) -->
+<div class="modal-bg" id="apresBg" onclick="if(event.target===this)fecharApres()">
+  <div class="modal apres" id="apres" role="dialog" aria-modal="true" aria-label="Visão de apresentação"></div>
 </div>
 
 <div class="foot">
@@ -1371,16 +1450,355 @@ function renderPainel(){
   ].map(k=>`<div class="kpi"><div class="v">${k[1].toLocaleString("pt-BR")}</div><div class="l">${k[0]}</div></div>`).join("")
    +`<div class="kpi accent"><div class="v">${fmtR(impacto)}</div><div class="l">Impacto mensal total</div></div>`;
   // impacto por acordo
+  // v2.11 — mapa quadrado do Brasil
+  renderMapa();
   const box=document.getElementById("painelImpacto");
-  if(!ST.acordos.length||!cad.length){ box.className="empty"; box.textContent="Cadastre acordos e importe a base para ver o impacto."; return; }
+  if(!ST.acordos.length||!cad.length){ box.className="empty"; box.textContent="Cadastre acordos e importe a base para ver o impacto."; document.getElementById("painelChip").innerHTML=""; return; }
   box.className="";
+  // Filtro por UF selecionada no mapa (as linhas passam a contar só funcionários daquela UF)
+  const ufSel=MAPA.uf;
+  document.getElementById("painelChip").innerHTML = ufSel
+    ? `<span class="ufchip">UF ${esc(ufSel)} <a title="Limpar filtro" onclick="selecionarUFMapa('${esc(ufSel)}')">×</a></span>` : "";
+  const linhas=ST.acordos.map(a=>{
+    let r=RESULTS[a.id]||[];
+    if(ufSel) r=r.filter(x=>normalizarUF(x.uf)===ufSel);
+    return {a,r};
+  }).filter(o=>!ufSel||o.r.length);
+  MAPA.listaAcordos=linhas.map(o=>o.a.id);
+  let tot={pop:0,inel:0,pr:0,ca:0,im:0};
   box.innerHTML=`<div class="tablewrap" style="max-height:none"><table class="data"><thead><tr>
-    <th>Acordo</th><th>População</th><th>Inelegíveis</th><th>Aum. no período</th><th>Com aumento</th><th class="num">Impacto R$</th></tr></thead><tbody>`+
-    ST.acordos.map(a=>{const r=RESULTS[a.id]||[];const ca=r.filter(x=>x.aplicacao>0).length;
+    <th>Acordo</th><th>Data-base</th><th class="num">% Reajuste</th><th class="num">Piso</th><th class="num">Teto</th><th>População</th><th>Inelegíveis</th><th>Aum. no período</th><th>Com aumento</th><th class="num">Impacto R$</th></tr></thead><tbody>`+
+    linhas.map(({a,r})=>{const ca=r.filter(x=>x.aplicacao>0).length;
       const inel=r.filter(x=>!x.elegivel).length; const pr=r.filter(x=>x.promo&&x.promo.tem).length;
       const im=r.reduce((s,x)=>s+(x.aplicacao||0),0);
-      return `<tr><td>${esc(a.id)}</td><td>${r.length}</td><td>${inel}</td><td>${pr}</td><td>${ca}</td><td class="num">${fmtR(im)}</td></tr>`;}).join("")
+      tot.pop+=r.length; tot.inel+=inel; tot.pr+=pr; tot.ca+=ca; tot.im+=im;
+      return `<tr title="Duplo-clique: visão de apresentação" ondblclick="abrirApresAcordo('${esc(a.id)}')"><td>${esc(a.id)}</td><td>${esc(dataBaseTxt(a))}</td><td class="num">${fmtP(a.reajuste)}</td><td class="num">${a.piso==null?"—":fmtR(a.piso)}</td><td class="num">${a.teto==null?"—":fmtR(a.teto)}</td><td>${r.length}</td><td>${inel}</td><td>${pr}</td><td>${ca}</td><td class="num">${fmtR(im)}</td></tr>`;}).join("")
+    +`<tr style="font-weight:500;color:var(--azul-esc);background:var(--hdr-tab)"><td>TOTAL · ${linhas.length} acordo(s)</td><td></td><td></td><td></td><td></td><td>${tot.pop}</td><td>${tot.inel}</td><td>${tot.pr}</td><td>${tot.ca}</td><td class="num">${fmtR(tot.im)}</td></tr>`
     +`</tbody></table></div>`;
+}
+
+/* ============================================================
+   v2.11 — MAPA QUADRADO DO BRASIL (tile map) + MODO APRESENTAÇÃO
+   Tile map: cada UF = 1 quadrado na posição aproximada do território.
+   Clique = filtra a tabela de acordos · duplo-clique = apresentação.
+============================================================ */
+const UF_NOMES={AC:"Acre",AL:"Alagoas",AP:"Amapá",AM:"Amazonas",BA:"Bahia",CE:"Ceará",DF:"Distrito Federal",ES:"Espírito Santo",
+  GO:"Goiás",MA:"Maranhão",MT:"Mato Grosso",MS:"Mato Grosso do Sul",MG:"Minas Gerais",PA:"Pará",PB:"Paraíba",PR:"Paraná",
+  PE:"Pernambuco",PI:"Piauí",RJ:"Rio de Janeiro",RN:"Rio Grande do Norte",RS:"Rio Grande do Sul",RO:"Rondônia",RR:"Roraima",
+  SC:"Santa Catarina",SP:"São Paulo",SE:"Sergipe",TO:"Tocantins"};
+// [coluna, linha] — grade 6 × 8
+const UF_GRID={RR:[2,1],AP:[4,1],
+  AM:[2,2],PA:[3,2],MA:[4,2],CE:[5,2],RN:[6,2],
+  AC:[1,3],RO:[2,3],TO:[3,3],PI:[4,3],PE:[5,3],PB:[6,3],
+  MT:[2,4],GO:[3,4],BA:[4,4],SE:[5,4],AL:[6,4],
+  MS:[2,5],DF:[3,5],MG:[4,5],ES:[5,5],
+  PR:[2,6],SP:[3,6],RJ:[4,6],
+  SC:[2,7],
+  RS:[2,8]};
+const MAPA_METRICAS={
+  impacto:{rot:"Impacto R$", fmt:v=>fmtR(v), curto:v=>fmtCurtoR(v)},
+  pop:{rot:"População", fmt:v=>(+v||0).toLocaleString("pt-BR"), curto:v=>(+v||0).toLocaleString("pt-BR")},
+  comAum:{rot:"Com aumento", fmt:v=>(+v||0).toLocaleString("pt-BR"), curto:v=>(+v||0).toLocaleString("pt-BR")},
+  nAcordos:{rot:"Acordos", fmt:v=>(+v||0).toLocaleString("pt-BR"), curto:v=>(+v||0).toLocaleString("pt-BR")},
+};
+let MAPA={metrica:"impacto", uf:"", listaAcordos:[], timer:null};
+let APRES={tipo:null, lista:[], idx:0, charts:[]};
+
+function fmtCurtoR(v){
+  v=+v||0; const a=Math.abs(v);
+  if(a>=1e6) return "R$ "+(v/1e6).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi";
+  if(a>=1e3) return "R$ "+(v/1e3).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mil";
+  return "R$ "+v.toLocaleString("pt-BR",{maximumFractionDigits:0});
+}
+function acordoPorId(id){ return ST.acordos.find(a=>a.id===id)||null; }
+function dataBaseTxt(a){ return a&&a.mes? String(a.mes).padStart(2,"0")+"/"+a.ano : ""; }
+
+// Estatística padrão de um conjunto de linhas de resultado (usada no mapa, apresentação e Excel)
+function statsLinhas(rs){
+  const s={pop:rs.length, eleg:0, inel:0, promo:0, comAum:0, teto:0, piso:0, baseEd:0, alertas:0, conferidos:0,
+           folha:0, folhaPos:0, impacto:0, maxAum:0, minSal:null, maxSal:null};
+  rs.forEach(r=>{
+    if(r.elegivel) s.eleg++; else s.inel++;
+    if(r.promo&&r.promo.tem) s.promo++;
+    if((r.aplicacao||0)>0) s.comAum++;
+    if(r.elegivel&&r.acimaTeto) s.teto++;
+    if(r.enquad!=null) s.piso++;
+    if(r.baseEditada) s.baseEd++;
+    if(r.elegivel&&r.avoOk===false) s.alertas++;
+    if(r.conferido) s.conferidos++;
+    const sa=+r.salAtual||0, sf=+r.salFinal||0;
+    s.folha+=sa; s.folhaPos+=sf; s.impacto+=(+r.aplicacao||0);
+    if((r.aplicacao||0)>s.maxAum) s.maxAum=+r.aplicacao;
+    if(sa>0){ if(s.minSal==null||sa<s.minSal) s.minSal=sa; if(s.maxSal==null||sa>s.maxSal) s.maxSal=sa; }
+  });
+  s.folha=round2(s.folha); s.folhaPos=round2(s.folhaPos); s.impacto=round2(s.impacto);
+  s.medio=s.comAum? round2(s.impacto/s.comAum) : 0;
+  s.pctFolha=s.folha? s.impacto/s.folha : 0;
+  return s;
+}
+function agregarPorUF(rows){
+  const m={};
+  rows.forEach(r=>{
+    const uf=normalizarUF(r.uf)||"—";
+    const o=m[uf]||(m[uf]={uf, rows:[], acordos:new Set(), cidades:new Set()});
+    o.rows.push(r); o.acordos.add(r.acordoId); if(r.municipio) o.cidades.add(r.municipio);
+  });
+  for(const uf in m){ const o=m[uf]; Object.assign(o, statsLinhas(o.rows)); o.nAcordos=o.acordos.size; }
+  return m;
+}
+function corEscala(t){ // #C9E1F1 → #0083CA → #003C64
+  const lerp=(a,b,k)=>Math.round(a+(b-a)*k);
+  const c1=[0xC9,0xE1,0xF1], c2=[0x00,0x83,0xCA], c3=[0x00,0x3C,0x64];
+  let a,b,k; if(t<=.6){a=c1;b=c2;k=t/.6;} else {a=c2;b=c3;k=(t-.6)/.4;}
+  return `rgb(${lerp(a[0],b[0],k)},${lerp(a[1],b[1],k)},${lerp(a[2],b[2],k)})`;
+}
+function setMapaMetrica(m){
+  MAPA.metrica=m;
+  document.querySelectorAll("#mapaMetrica button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  renderMapa();
+}
+function renderMapa(){
+  const wrap=document.getElementById("mapaWrap"), vazio=document.getElementById("mapaVazio");
+  if(!wrap) return;
+  const rows=todosResultados();
+  if(!rows.length){ wrap.style.display="none"; vazio.style.display="block"; document.getElementById("mapaChip").innerHTML=""; return; }
+  wrap.style.display=""; vazio.style.display="none";
+  const agg=agregarPorUF(rows); MAPA.agg=agg;
+  const met=MAPA_METRICAS[MAPA.metrica];
+  const vals=Object.values(agg).filter(o=>UF_GRID[o.uf]).map(o=>+o[MAPA.metrica]||0);
+  const max=Math.max(0,...vals), min=vals.length?Math.min(...vals):0;
+  document.getElementById("legMin").textContent=met.curto(min);
+  document.getElementById("legMax").textContent=met.curto(max);
+  document.getElementById("mapaChip").innerHTML = MAPA.uf
+    ? `<span class="ufchip">${esc(UF_NOMES[MAPA.uf]||MAPA.uf)} <a title="Limpar seleção" onclick="selecionarUFMapa('${esc(MAPA.uf)}')">×</a></span>` : "";
+  // tiles
+  document.getElementById("tileMap").innerHTML=Object.keys(UF_GRID).map(uf=>{
+    const [c,l]=UF_GRID[uf]; const o=agg[uf];
+    const pos=`grid-column:${c};grid-row:${l}`;
+    if(!o) return `<div class="tile vazio" style="${pos}" title="${esc(UF_NOMES[uf])} — sem população coberta"><span class="uf">${uf}</span></div>`;
+    const v=+o[MAPA.metrica]||0;
+    const t=max>0? Math.sqrt(v/max) : 0; // raiz: evita que um estado grande "apague" os demais
+    const bg=corEscala(t), fg=t>.38?"#fff":"#003C64";
+    const tip=`${UF_NOMES[uf]||uf}\nPopulação: ${o.pop} · Com aumento: ${o.comAum}\nImpacto: ${fmtR(o.impacto)} · Acordos: ${o.nAcordos}\nDuplo-clique: apresentação`;
+    return `<div class="tile${MAPA.uf===uf?" sel":""}" tabindex="0" role="button" style="${pos};background:${bg};color:${fg}" title="${esc(tip)}"
+      onclick="cliqueTileUF('${uf}')" ondblclick="dblTileUF('${uf}')" onkeydown="if(event.key==='Enter')abrirApresUF('${uf}')">
+      <span class="uf">${uf}</span><span class="val">${esc(met.curto(v))}</span></div>`;
+  }).join("");
+  // ranking lateral
+  const ord=Object.values(agg).sort((a,b)=>(+b[MAPA.metrica]||0)-(+a[MAPA.metrica]||0));
+  MAPA.ordemUF=ord.filter(o=>o.uf!=="—").map(o=>o.uf);
+  const tot=statsLinhas(rows);
+  document.getElementById("mapaSide").innerHTML=`
+    <div class="kpis" style="margin-bottom:12px">
+      <div class="kpi"><div class="v">${ord.filter(o=>o.uf!=="—").length}</div><div class="l">UFs com população</div></div>
+      <div class="kpi accent"><div class="v">${fmtR(tot.impacto)}</div><div class="l">Impacto mensal</div></div>
+      <div class="kpi"><div class="v">${fmtP(tot.pctFolha)}</div><div class="l">Impacto s/ folha</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:6px">Ranking · ${esc(met.rot)}</div>
+    <ul class="rank">${ord.map(o=>{
+      const v=+o[MAPA.metrica]||0, w=max>0? Math.max(1,v/max*100) : 0;
+      const clickable=o.uf!=="—";
+      return `<li class="${MAPA.uf===o.uf?"sel":""}" ${clickable?`onclick="cliqueTileUF('${o.uf}')" ondblclick="dblTileUF('${o.uf}')"`:""} title="${esc(UF_NOMES[o.uf]||"UF não informada")}">
+        <span class="u">${esc(o.uf)}</span><span><span class="b" style="display:block;width:${w}%"></span></span><span class="n">${esc(met.fmt(v))}</span></li>`;
+    }).join("")}</ul>`;
+}
+function cliqueTileUF(uf){
+  clearTimeout(MAPA.timer);
+  MAPA.timer=setTimeout(()=>{ selecionarUFMapa(uf); },230);
+}
+function dblTileUF(uf){ clearTimeout(MAPA.timer); MAPA.timer=null; abrirApresUF(uf); }
+function selecionarUFMapa(uf){ MAPA.uf = MAPA.uf===uf? "" : uf; renderPainel(); }
+
+/* ---------- Apresentação: infraestrutura ---------- */
+function destruirChartsApres(){ APRES.charts.forEach(c=>{try{c.destroy();}catch(_){}}); APRES.charts=[]; }
+function fecharApres(){
+  destruirChartsApres();
+  if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(_){} }
+  document.getElementById("apresBg").classList.remove("on");
+  APRES.tipo=null;
+}
+function telaCheiaApres(){
+  const el=document.getElementById("apres");
+  if(document.fullscreenElement) document.exitFullscreen();
+  else if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+}
+function navegarApres(d){
+  if(!APRES.tipo||APRES.lista.length<2) return;
+  APRES.idx=(APRES.idx+d+APRES.lista.length)%APRES.lista.length;
+  const alvo=APRES.lista[APRES.idx];
+  if(APRES.tipo==="uf") montarApresUF(alvo); else montarApresAcordo(alvo);
+}
+document.addEventListener("keydown",e=>{
+  if(!APRES.tipo) return;
+  if(e.key==="ArrowRight"){ e.preventDefault(); navegarApres(1); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); navegarApres(-1); }
+  else if(e.key==="Escape" && !document.fullscreenElement){ fecharApres(); }
+});
+function cabecalhoApres(titulo, sub){
+  const n=APRES.lista.length, nav=n>1?`<button onclick="navegarApres(-1)" title="Anterior (←)">‹</button><span class="nav">${APRES.idx+1} / ${n}</span><button onclick="navegarApres(1)" title="Próximo (→)">›</button>`:"";
+  return `<div class="apres-hdr">
+    <div class="acts">${nav}
+      <button onclick="exportarApres()" title="Excel com resumo, consolidado e parâmetros">⬇ Excel</button>
+      <button onclick="telaCheiaApres()" title="Tela cheia">⛶ Tela cheia</button>
+      <button onclick="fecharApres()" title="Fechar (Esc)">✕</button></div>
+    <div class="t">${titulo}</div><div class="s">${sub}</div>
+    <svg class="wave" viewBox="0 0 1200 20" preserveAspectRatio="none"><path d="M0 12 Q150 2 300 12 T600 12 T900 12 T1200 12 V20 H0 Z" fill="#fff"/></svg>
+  </div>`;
+}
+function rodapeApres(){
+  const d=new Date();
+  return `<div class="apres-foot"><span>Aplicador de Dissídio / CCT · gerado em ${fmtD(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")} · dados processados no navegador</span><span><b>Anderson Marinho</b> | Igarapé Digital</span></div>`;
+}
+function kpisApres(lst){
+  return `<div class="apres-kpis">`+lst.map(k=>`<div class="kpi${k[2]?" accent":""}"><div class="v">${k[1]}</div><div class="l">${esc(k[0])}</div></div>`).join("")+`</div>`;
+}
+const CHART_FONT={family:"Roboto", size:11};
+function chartBarH(canvasId, labels, data, cor, fmt){
+  const c=new Chart(document.getElementById(canvasId),{type:"bar",
+    data:{labels, datasets:[{data, backgroundColor:cor||"#0083CA", borderRadius:4, maxBarThickness:22}]},
+    options:{indexAxis:"y", maintainAspectRatio:false, responsive:true,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>" "+(fmt?fmt(ctx.raw):ctx.raw)}}},
+      scales:{x:{ticks:{color:"#646464",font:CHART_FONT,callback:v=>fmt?fmt(v):v},grid:{color:"#EEF3F7"}},
+              y:{ticks:{color:"#333333",font:CHART_FONT},grid:{display:false}}}}});
+  APRES.charts.push(c); return c;
+}
+// Dispersão salário × aumento com linha de tendência (MQO) e anomalias (|resíduo| > 2σ)
+function chartDispersao(canvasId, rows){
+  const pts=rows.filter(r=>r.elegivel&&r.salAtual>0).map(r=>({x:+r.salAtual,y:+r.aplicacao||0,nome:r.nome,acordo:r.acordoId}));
+  const n=pts.length; let trend=[], normais=pts, anom=[];
+  if(n>=3){
+    const mx=pts.reduce((s,p)=>s+p.x,0)/n, my=pts.reduce((s,p)=>s+p.y,0)/n;
+    let sxy=0,sxx=0; pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my); sxx+=(p.x-mx)**2;});
+    const b=sxx?sxy/sxx:0, a=my-b*mx;
+    const res=pts.map(p=>p.y-(a+b*p.x)); const sd=Math.sqrt(res.reduce((s,r)=>s+r*r,0)/n);
+    normais=[]; anom=[]; pts.forEach((p,i)=>{ (sd>0&&Math.abs(res[i])>2*sd? anom:normais).push(p); });
+    const xs=pts.map(p=>p.x), x0=Math.min(...xs), x1=Math.max(...xs);
+    trend=[{x:x0,y:a+b*x0},{x:x1,y:a+b*x1}];
+  }
+  const c=new Chart(document.getElementById(canvasId),{type:"scatter",
+    data:{datasets:[
+      {label:"Funcionários", data:normais, pointRadius:3, backgroundColor:"#0083CA"},
+      {label:"Fora da tendência (2σ)", data:anom, pointRadius:5, backgroundColor:"#7D0041"},
+      {label:"Tendência", type:"line", data:trend, borderColor:"#8C321E", borderDash:[6,4], borderWidth:1.5, pointRadius:0, fill:false}
+    ]},
+    options:{maintainAspectRatio:false, responsive:true,
+      plugins:{legend:{labels:{font:CHART_FONT,color:"#646464",boxWidth:10}},
+        tooltip:{callbacks:{label:ctx=>{const p=ctx.raw; return p.nome? ` ${p.nome} · ${fmtR(p.x)} → +${fmtR(p.y)}` : " tendência";}}}},
+      scales:{x:{title:{display:true,text:"Salário atual (R$)",font:CHART_FONT},ticks:{color:"#646464",font:CHART_FONT},grid:{color:"#EEF3F7"}},
+              y:{title:{display:true,text:"Aumento (R$)",font:CHART_FONT},ticks:{color:"#646464",font:CHART_FONT},grid:{color:"#EEF3F7"}}}}});
+  APRES.charts.push(c); return {n, anom:anom.length};
+}
+function tabelaMiniHTML(head, linhas, numCols){
+  numCols=new Set(numCols||[]);
+  return `<div class="tablewrap" style="max-height:290px"><table class="data"><thead><tr>${head.map((h,i)=>`<th class="${numCols.has(i)?"num":""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>`+
+    (linhas.length? linhas.map(l=>`<tr>${l.map((v,i)=>`<td class="${numCols.has(i)?"num":""}">${esc(v)}</td>`).join("")}</tr>`).join("")
+                  : `<tr><td colspan="${head.length}" class="empty">Sem dados.</td></tr>`)+`</tbody></table></div>`;
+}
+
+/* ---------- Apresentação por UF ---------- */
+function abrirApresUF(uf){
+  if(!MAPA.agg||!MAPA.agg[uf]) return;
+  APRES.tipo="uf"; APRES.lista=(MAPA.ordemUF||[uf]).slice(); APRES.idx=Math.max(0,APRES.lista.indexOf(uf));
+  document.getElementById("apresBg").classList.add("on"); // abre antes: Chart.js mede o canvas visível
+  montarApresUF(uf);
+}
+function montarApresUF(uf){
+  destruirChartsApres();
+  const agg=agregarPorUF(todosResultados()); const o=agg[uf]; if(!o) return;
+  APRES.rowsAtual=o.rows; APRES.nomeAtual="apresentacao_UF_"+uf; APRES.descAtual=[["Recorte","UF "+uf+" — "+(UF_NOMES[uf]||uf)]];
+  // por acordo
+  const porAc={}; o.rows.forEach(r=>{(porAc[r.acordoId]=porAc[r.acordoId]||[]).push(r);});
+  const acs=Object.keys(porAc).map(id=>({id, a:acordoPorId(id), s:statsLinhas(porAc[id])})).sort((x,y)=>y.s.impacto-x.s.impacto);
+  // por cidade (top 10)
+  const porCid={}; o.rows.forEach(r=>{const c=r.municipio||"(sem cidade)"; porCid[c]=(porCid[c]||0)+(+r.aplicacao||0);});
+  const cids=Object.entries(porCid).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const el=document.getElementById("apres");
+  el.innerHTML=cabecalhoApres(`${esc(uf)} · ${esc(UF_NOMES[uf]||"")}`,
+      `${o.nAcordos} acordo(s) · ${o.cidades.size} município(s) · ${o.pop} pessoa(s) na população coberta`)
+    +`<div class="apres-body">`
+    +kpisApres([["População coberta",o.pop.toLocaleString("pt-BR")],["Elegíveis",o.eleg.toLocaleString("pt-BR")],
+        ["Com aumento",o.comAum.toLocaleString("pt-BR")],["Folha atual",fmtR(o.folha)],["Impacto mensal",fmtR(o.impacto),true],
+        ["Aumento médio",fmtR(o.medio)],["Impacto s/ folha",fmtP(o.pctFolha)]])
+    +`<div class="apres-grid">
+        <div class="card"><h3>Impacto por acordo (R$)</h3><div class="chartbox"><canvas id="apC1"></canvas></div></div>
+        <div class="card"><h3>Impacto por cidade (top 10)</h3><div class="chartbox"><canvas id="apC2"></canvas></div></div>
+        <div class="card"><h3>Dispersão: salário atual × aumento</h3><div class="chartbox"><canvas id="apC3"></canvas></div><div class="hint" id="apC3h"></div></div>
+        <div class="card"><h3>Parâmetros dos acordos na UF</h3>${tabelaMiniHTML(
+          ["Acordo","Data-base","% Reaj.","Piso","Teto","Pop.","Impacto"],
+          acs.map(x=>[x.id, dataBaseTxt(x.a), x.a?fmtP(x.a.reajuste):"", x.a&&x.a.piso!=null?fmtR(x.a.piso):"—", x.a&&x.a.teto!=null?fmtR(x.a.teto):"—", x.s.pop, fmtR(x.s.impacto)]),
+          [2,3,4,5,6])}</div>
+      </div></div>`+rodapeApres();
+  chartBarH("apC1", acs.map(x=>x.id.length>38?x.id.slice(0,36)+"…":x.id), acs.map(x=>x.s.impacto), "#0083CA", fmtCurtoR);
+  chartBarH("apC2", cids.map(c=>c[0]), cids.map(c=>round2(c[1])), "#005A64", fmtCurtoR);
+  const d=chartDispersao("apC3", o.rows);
+  document.getElementById("apC3h").textContent=`${d.n} elegíveis plotados · ${d.anom} fora da tendência (resíduo > 2σ, em vinho).`;
+}
+
+/* ---------- Apresentação por acordo ---------- */
+function abrirApresAcordo(id){
+  if(!acordoPorId(id)) return;
+  APRES.tipo="acordo"; APRES.lista=(MAPA.listaAcordos&&MAPA.listaAcordos.length? MAPA.listaAcordos : ST.acordos.map(a=>a.id)).slice();
+  APRES.idx=Math.max(0,APRES.lista.indexOf(id));
+  document.getElementById("apresBg").classList.add("on");
+  montarApresAcordo(id);
+}
+function montarApresAcordo(id){
+  destruirChartsApres();
+  const a=acordoPorId(id); if(!a) return;
+  let rows=RESULTS[id]||[];
+  const ufSel=MAPA.uf; if(ufSel) rows=rows.filter(r=>normalizarUF(r.uf)===ufSel);
+  const s=statsLinhas(rows);
+  APRES.rowsAtual=rows; APRES.nomeAtual="apresentacao_acordo_"+String(id).replace(/[^\w\-]+/g,"_").slice(0,60);
+  APRES.descAtual=[["Recorte","Acordo "+id+(ufSel?" · UF "+ufSel:"")]];
+  const per=periodoAcordo(a);
+  const escopo=[a.uf,a.municipio].filter(Boolean).join(" / ")||"todas as localidades";
+  // composição da população
+  const comp={"Sal. nominal":0,"Base do acordo (teto)":0,"Enquadrado no piso":0,"Base editada":0,"Sem aumento":0,"Inelegível":0};
+  rows.forEach(r=>{
+    if(!r.elegivel) comp["Inelegível"]++;
+    else if(!(r.aplicacao>0)) comp["Sem aumento"]++;
+    else if(r.enquad!=null) comp["Enquadrado no piso"]++;
+    else if(r.baseEditada) comp["Base editada"]++;
+    else if(r.acimaTeto) comp["Base do acordo (teto)"]++;
+    else comp["Sal. nominal"]++;
+  });
+  const fx=[...(a.faixas||[])].filter(f=>f.avo>0).sort((x,y)=>y.avo-x.avo);
+  const top=rows.filter(r=>r.aplicacao>0).sort((x,y)=>y.aplicacao-x.aplicacao).slice(0,10);
+  const extras=[["Garantia comissão",a.garantia_comissao],["HE",a.he],["Abono",a.abono],["VR",a.vr],["VT",a.vt],["Assistência",a.assistencia],
+    ["Datas alternativas / atenção",a.atencao],["CNPJ",a.cnpj],["CNPJ patronal",a.cnpj_patronal],["Sindicatos vinculados",(a.sinds||[]).join(" | ")],["Observações",a.obs]]
+    .filter(x=>x[1]!=null&&String(x[1]).trim()!=="");
+  const el=document.getElementById("apres");
+  el.innerHTML=cabecalhoApres(esc(a.id), `${a.nome?esc(a.nome)+" · ":""}escopo ${esc(escopo)} · apuração ${fmtD(per.de)} a ${fmtD(per.ate)}${ufSel?" · recorte UF "+esc(ufSel):""}`)
+    +`<div class="apres-body">`
+    +kpisApres([["Data-base",dataBaseTxt(a)],["% Reajuste",fmtP(a.reajuste)],["Piso",a.piso==null?"Sem piso":fmtR(a.piso)],
+        ["Teto",a.teto==null?"Sem teto":fmtR(a.teto)],["População",s.pop.toLocaleString("pt-BR")],["Com aumento",s.comAum.toLocaleString("pt-BR")],
+        ["Impacto mensal",fmtR(s.impacto),true],["Aumento médio",fmtR(s.medio)],["Impacto s/ folha",fmtP(s.pctFolha)]])
+    +`<div class="apres-grid">
+        <div class="card"><h3>Proporcionalidade por avos (%)</h3><div class="chartbox"><canvas id="apA1"></canvas></div></div>
+        <div class="card"><h3>Composição da população</h3><div class="chartbox"><canvas id="apA2"></canvas></div></div>
+        <div class="card"><h3>Dispersão: salário atual × aumento</h3><div class="chartbox"><canvas id="apA3"></canvas></div><div class="hint" id="apA3h"></div></div>
+        <div class="card"><h3>Maiores aumentos</h3>${tabelaMiniHTML(["Nome","Cidade","Sal. atual","Sal. final","Aumento"],
+          top.map(r=>[r.nome,r.municipio||"",fmtR(r.salAtual),fmtR(r.salFinal),fmtR(r.aplicacao)]),[2,3,4])}</div>
+      </div>`
+    +(extras.length? `<div class="card" style="margin-top:16px"><h3>Demais cláusulas cadastradas</h3><div class="kv">${extras.map(x=>`<div><b>${esc(x[0])}</b>${esc(typeof x[1]==="number"?fmtR(x[1]):x[1])}</div>`).join("")}</div></div>`:"")
+    +`</div>`+rodapeApres();
+  const cA1=new Chart(document.getElementById("apA1"),{type:"bar",
+    data:{labels:fx.map(f=>f.avo+"/12"), datasets:[{data:fx.map(f=>round2((+f.pct||0)*10000)/100), backgroundColor:"#0083CA", borderRadius:4, maxBarThickness:28}]},
+    options:{maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.raw.toLocaleString("pt-BR")+"%"}}},
+      scales:{x:{ticks:{font:CHART_FONT,color:"#646464"},grid:{display:false}},y:{ticks:{font:CHART_FONT,color:"#646464",callback:v=>v+"%"},grid:{color:"#EEF3F7"}}}}});
+  APRES.charts.push(cA1);
+  const labs=Object.keys(comp).filter(k=>comp[k]>0);
+  const cores={"Sal. nominal":"#0083CA","Base do acordo (teto)":"#8C321E","Enquadrado no piso":"#005A64","Base editada":"#B8860B","Sem aumento":"#8A8A8A","Inelegível":"#7D0041"};
+  const cA2=new Chart(document.getElementById("apA2"),{type:"doughnut",
+    data:{labels:labs, datasets:[{data:labs.map(k=>comp[k]), backgroundColor:labs.map(k=>cores[k]), borderColor:"#fff", borderWidth:2}]},
+    options:{maintainAspectRatio:false, cutout:"58%", plugins:{legend:{position:"right",labels:{font:CHART_FONT,color:"#333333",boxWidth:12}}}}});
+  APRES.charts.push(cA2);
+  const d=chartDispersao("apA3", rows);
+  document.getElementById("apA3h").textContent=`${d.n} elegíveis plotados · ${d.anom} fora da tendência (resíduo > 2σ, em vinho).`;
+}
+function exportarApres(){
+  if(!APRES.rowsAtual||!APRES.rowsAtual.length){ alert("Sem linhas neste recorte."); return; }
+  exportarPacoteXLSX(APRES.rowsAtual, APRES.nomeAtual, APRES.descAtual);
 }
 
 /* ============================================================
@@ -1985,6 +2403,15 @@ const EXP_SPEC=[
 ];
 // Cabeçalhos "fixos" da exportação — usados para deduplicar com colunas extras do seletor
 const EXP_HEADERS_FIXOS=new Set(EXP_SPEC.map(c=>stripAcc(c.h)));
+// v2.11 — parâmetros do acordo repetidos em cada linha do Consolidado (CSV e Excel)
+const EXP_SPEC_ACORDO=[
+  {h:"Sindicato (acordo)",  v:r=>{const a=acordoPorId(r.acordoId); return a?(a.nome||""):"";}},
+  {h:"Data-base acordo",    v:r=>dataBaseTxt(acordoPorId(r.acordoId))},
+  {h:"% Reajuste acordo",   v:r=>{const a=acordoPorId(r.acordoId); return a&&a.reajuste!=null?a.reajuste:"";}},
+  {h:"Piso acordo",         v:r=>{const a=acordoPorId(r.acordoId); return a&&a.piso!=null&&a.piso!==""?+a.piso:"Sem piso";}},
+  {h:"Teto acordo",         v:r=>{const a=acordoPorId(r.acordoId); return a&&a.teto!=null&&a.teto!==""?+a.teto:"Sem teto";}},
+  {h:"Enquadrado no piso",  v:r=>r.enquad!=null?"Sim":""},
+];
 function estiloLinha(r){ // espelha a pintura da tela
   if(r.conferido) return "conf";
   if(!r.elegivel) return "inel";
@@ -1998,7 +2425,7 @@ function matrizExport(rows, incluirAcordo, ctx){
   const extrasSpec=extras
     .filter(h=>!EXP_HEADERS_FIXOS.has(stripAcc(h)))
     .map(h=>({h, v:r=>(r.raw&&r.raw[h]!=null)?r.raw[h]:""}));
-  const base = incluirAcordo? [{h:"Acordo", v:r=>r.acordoId}].concat(EXP_SPEC) : EXP_SPEC.slice();
+  const base = incluirAcordo? [{h:"Acordo", v:r=>r.acordoId}].concat(EXP_SPEC_ACORDO, EXP_SPEC) : EXP_SPEC.slice();
   // Extras entram depois da Chefia (para agrupar próximos aos outros dados de raw)
   const idxChefia = base.findIndex(c=>stripAcc(c.h)===stripAcc("Chefia Imediata - Nome"));
   const spec = idxChefia>=0
@@ -2040,14 +2467,14 @@ function larguraCol(matriz, c){
   }
   return Math.max(min, Math.min(cap, max+3));
 }
-function exportarXLSX(matriz, nome, estilos, spec){
-  estilos=estilos||[];
+function montarSheetDissidio(matriz, estilos, opts){
+  estilos=estilos||[]; opts=opts||{};
   const ws=XLSX.utils.aoa_to_sheet(matriz);
   const range=XLSX.utils.decode_range(ws["!ref"]);
   // Detecta colunas de moeda / percentual pelo cabeçalho quando spec não é passada
   const head=matriz[0]||[];
   const isPct=h=>/^%|(?:^| )%(?: |$)/.test(String(h||""))||String(h||"").toLowerCase().includes("% aumento");
-  const isMon=h=>{ const s=stripAcc(String(h||"")); return s.includes("salario")||s==="base"||s.includes("aplicacao"); };
+  const isMon=h=>{ const s=stripAcc(String(h||"")); return s.includes("salario")||s==="base"||s.includes("aplicacao")||s.startsWith("piso ")||s.startsWith("teto "); };
   const pctCols=new Set(), monCols=new Set();
   head.forEach((h,i)=>{ if(isPct(h)) pctCols.add(i); else if(isMon(h)) monCols.add(i); });
   const hdrFills=head.map(fillCabecalho);
@@ -2073,8 +2500,34 @@ function exportarXLSX(matriz, nome, estilos, spec){
   ws["!rows"]=[{hpt:26}];
   ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:range.e.r,c:range.e.c}})};
   ws["!freeze"]={xSplit:"0", ySplit:"1"};
+  if(opts.totais) adicionarLinhaTotalSubtotal(ws, matriz);
+  return ws;
+}
+function exportarXLSX(matriz, nome, estilos, spec){
+  const ws=montarSheetDissidio(matriz, estilos);
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Dissídio");
   XLSX.writeFile(wb,nome+".xlsx");
+}
+// Linha TOTAL com SUBTOTAL(9,…): respeita o autofiltro do Excel (soma só o que estiver visível)
+function adicionarLinhaTotalSubtotal(ws, matriz){
+  const head=matriz[0]||[]; const n=matriz.length-1; if(n<1) return;
+  const R=matriz.length;
+  const somar=head.map(h=>{ const s=stripAcc(String(h||"")); return s.includes("salario")||s.includes("aplicacao"); });
+  const borda={style:"thin",color:{rgb:"CCCCCC"}}, topo={style:"medium",color:{rgb:"0083CA"}};
+  head.forEach((h,C)=>{
+    let cell;
+    if(C===0) cell={t:"s",v:"TOTAL"};
+    else if(C===1) cell={t:"s",v:n+" linha(s)"};
+    else if(somar[C]){
+      const col=XLSX.utils.encode_col(C); let soma=0;
+      for(let i=1;i<=n;i++){ const v=matriz[i][C]; if(typeof v==="number") soma+=v; }
+      cell={t:"n", v:round2(soma), f:`SUBTOTAL(9,${col}2:${col}${n+1})`, z:'"R$" #,##0.00'};
+    } else cell={t:"s",v:""};
+    cell.s={font:{name:"Calibri Light",sz:8,bold:true,color:{rgb:"003C64"}}, fill:{fgColor:{rgb:"E8F3FA"}},
+            alignment:{vertical:"center"}, border:{top:topo,bottom:borda,left:borda,right:borda}};
+    ws[XLSX.utils.encode_cell({r:R,c:C})]=cell;
+  });
+  const range=XLSX.utils.decode_range(ws["!ref"]); range.e.r=R; ws["!ref"]=XLSX.utils.encode_range(range);
 }
 function baixar(blob,nome){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=nome; a.click(); }
 function exportarCalc(fmt){
@@ -2084,7 +2537,122 @@ function exportarCalc(fmt){
 }
 function exportarConsol(fmt){
   const rows=LAST_ROWS["con"]||[]; const {matriz,estilos}=matrizExport(rows,true,"con");
-  fmt==="csv"?exportarCSV(matriz,"consolidado_dissidio"):exportarXLSX(matriz,"consolidado_dissidio",estilos);
+  if(fmt==="csv"){ exportarCSV(matriz,"consolidado_dissidio"); return; }
+  exportarPacoteXLSX(rows,"consolidado_dissidio",descreverFiltrosConsol());
+}
+function descreverFiltrosConsol(){
+  const g=id=>document.getElementById(id);
+  return [["Acordo",g("conAcordo").value||"Todos"],["UF",g("conUF").value||"Todas"],["Cidade",g("conCidade").value||"Todas"],
+    ["Busca",g("conBusca").value||"—"],["Só com aumento",g("conSoAumento").checked?"Sim":"Não"],
+    ["Excluir estágio",g("conExclEstagio").checked?"Sim":"Não"],["Só aumento no período",g("conSoPromo").checked?"Sim":"Não"]];
+}
+
+/* ============================================================
+   v2.11 — PACOTE EXCEL (multi-abas)
+   Resumo Acordos · Consolidado (+TOTAL) · Resumo UF · Parâmetros Acordos · Faixas Avos · Filtros
+============================================================ */
+function sheetResumo(matriz, fmt, opts){
+  opts=opts||{};
+  const ws=XLSX.utils.aoa_to_sheet(matriz);
+  const range=XLSX.utils.decode_range(ws["!ref"]);
+  const borda={style:"thin",color:{rgb:"CCCCCC"}}, topo={style:"medium",color:{rgb:"0083CA"}};
+  const head=matriz[0]||[], last=matriz.length-1;
+  const hdrFills=head.map(fillCabecalho);
+  for(let R=range.s.r;R<=range.e.r;R++){
+    const isTot=opts.total && R===last && R>0;
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const addr=XLSX.utils.encode_cell({r:R,c:C}); const cell=ws[addr]; if(!cell) continue;
+      cell.s={
+        font:{name:"Calibri Light",sz:8,bold:R===0||isTot,color:{rgb:(R===0||isTot)?"003C64":"333333"}},
+        fill:R===0?{fgColor:{rgb:hdrFills[C]}}:(isTot?{fgColor:{rgb:"E8F3FA"}}:undefined),
+        alignment:{vertical:"center",wrapText:R===0||!!opts.wrap,horizontal:R===0?"center":undefined},
+        border:{top:isTot?topo:borda,bottom:borda,left:borda,right:borda}
+      };
+      if(R>0 && typeof cell.v==="number"){
+        const f=fmt[C];
+        if(f==="mon") cell.z='"R$" #,##0.00'; else if(f==="pct") cell.z="0.00%"; else if(f==="int") cell.z="0";
+      }
+    }
+  }
+  ws["!cols"]=opts.larguras? opts.larguras.map(w=>({wch:w})) : head.map((_,c)=>({wch:larguraCol(matriz,c)}));
+  ws["!rows"]=[{hpt:26}];
+  const fimFiltro=opts.total? Math.max(0,range.e.r-1) : range.e.r;
+  if(fimFiltro>0 && !opts.semFiltro) ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:fimFiltro,c:range.e.c}})};
+  ws["!freeze"]={xSplit:"0", ySplit:"1"};
+  return ws;
+}
+function linhaStatsExcel(s){
+  return [s.pop,s.eleg,s.inel,s.promo,s.comAum,s.teto,s.piso,s.baseEd,s.alertas,s.conferidos,
+          s.minSal==null?"":round2(s.minSal), s.maxSal==null?"":round2(s.maxSal),
+          s.folha,s.folhaPos,s.impacto,s.medio,round2(s.maxAum),s.folha?round2(s.pctFolha*1e6)/1e6:0];
+}
+const HEAD_STATS=["População","Elegíveis","Inelegíveis","Aum. no período","Com aumento","Acima do teto","Enquadrados no piso",
+  "Base editada","Alertas avos","Conferidos","Menor salário","Maior salário","Folha atual","Folha pós-acordo","Impacto mensal",
+  "Aumento médio","Maior aumento","% Impacto s/ folha"];
+const FMT_STATS=["int","int","int","int","int","int","int","int","int","int","mon","mon","mon","mon","mon","mon","mon","pct"];
+function exportarPacoteXLSX(rows, nome, filtros){
+  if(!rows||!rows.length){ alert("Nenhuma linha para exportar com os filtros atuais."); return; }
+  const wb=XLSX.utils.book_new();
+  const ids=new Set(rows.map(r=>r.acordoId));
+  const acordos=ST.acordos.filter(a=>ids.has(a.id));
+  const porAc={}; rows.forEach(r=>{(porAc[r.acordoId]=porAc[r.acordoId]||[]).push(r);});
+  const totalS=statsLinhas(rows);
+
+  // 1) Resumo Acordos — parâmetros + totais por acordo
+  const headA=["Acordo","Sindicato","UF escopo","Cidade escopo","Sindicatos vinculados","Data-base","Período apuração",
+    "% Reajuste","Piso","Teto","% Menor faixa","% Maior faixa","Reaplicar auto"].concat(HEAD_STATS);
+  const fmtA=["txt","txt","txt","txt","txt","txt","txt","pct","mon","mon","pct","pct","txt"].concat(FMT_STATS);
+  const bodyA=acordos.map(a=>{
+    const per=periodoAcordo(a); const pcts=(a.faixas||[]).map(f=>+f.pct||0).filter(v=>v>0);
+    return [a.id, a.nome||"", a.uf||"Todas", a.municipio||"Todas", (a.sinds||[]).join(" | "), dataBaseTxt(a),
+      fmtD(per.de)+" a "+fmtD(per.ate), a.reajuste==null?"":a.reajuste,
+      a.piso==null||a.piso===""?"Sem piso":+a.piso, a.teto==null||a.teto===""?"Sem teto":+a.teto,
+      pcts.length?Math.min(...pcts):"", pcts.length?Math.max(...pcts):"", a.reaplicarAuto?"Sim":"Não"]
+      .concat(linhaStatsExcel(statsLinhas(porAc[a.id]||[])));
+  });
+  const totA=["TOTAL",acordos.length+" acordo(s)","","","","","","","","","","",""].concat(linhaStatsExcel(totalS));
+  XLSX.utils.book_append_sheet(wb, sheetResumo([headA,...bodyA,totA], fmtA, {total:true}), "Resumo Acordos");
+
+  // 2) Consolidado — linha a linha com parâmetros do acordo + TOTAL (SUBTOTAL)
+  const {matriz,estilos}=matrizExport(rows,true,"con");
+  XLSX.utils.book_append_sheet(wb, montarSheetDissidio(matriz,estilos,{totais:true}), "Consolidado");
+
+  // 3) Resumo UF
+  const agg=agregarPorUF(rows);
+  const headU=["UF","Estado","Acordos","Municípios"].concat(HEAD_STATS);
+  const fmtU=["txt","txt","int","int"].concat(FMT_STATS);
+  const bodyU=Object.values(agg).sort((x,y)=>y.impacto-x.impacto)
+    .map(o=>[o.uf, UF_NOMES[o.uf]||"", o.nAcordos, o.cidades.size].concat(linhaStatsExcel(o)));
+  const totU=["TOTAL",Object.keys(agg).length+" UF(s)",acordos.length,new Set(rows.map(r=>r.municipio).filter(Boolean)).size].concat(linhaStatsExcel(totalS));
+  XLSX.utils.book_append_sheet(wb, sheetResumo([headU,...bodyU,totU], fmtU, {total:true}), "Resumo UF");
+
+  // 4) Parâmetros Acordos — as 17 colunas do modelo (HE, abono, VR, VT, assistência...)
+  const headP=COLS_APLICADO.map(c=>c.h);
+  const fmtP_=COLS_APLICADO.map(c=>c.pct?"pct":(c.num?"mon":"txt"));
+  const bodyP=acordos.map(a=>COLS_APLICADO.map(c=>{ const v=c.v(a,ST.acordos.indexOf(a)); return v==null?"":v; }));
+  XLSX.utils.book_append_sheet(wb, sheetResumo([headP,...bodyP], fmtP_,
+    {wrap:true, larguras:[4,20,20,46,6,16,28,60,12,10,9,20,60,60,60,46,60]}), "Parâmetros Acordos");
+
+  // 5) Faixas Avos — % de cada avo por acordo (+ período de cada faixa)
+  const avos=[]; for(let v=12; v>=0; v--) avos.push(v);
+  const headF=["Acordo","Data-base","% Reajuste"].concat(avos.map(v=>v+" avos"));
+  const fmtF=["txt","txt","pct"].concat(avos.map(()=>"pct"));
+  const bodyF=acordos.map(a=>[a.id,dataBaseTxt(a),a.reajuste==null?"":a.reajuste]
+    .concat(avos.map(v=>{ const f=(a.faixas||[]).find(x=>x.avo===v); return f?(+f.pct||0):""; })));
+  XLSX.utils.book_append_sheet(wb, sheetResumo([headF,...bodyF], fmtF), "Faixas Avos");
+
+  // 6) Filtros / rastreabilidade
+  const d=new Date();
+  const filt=[["Campo","Valor"],["Gerado em",fmtD(d)+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")]]
+    .concat(filtros||[]).concat([["Linhas exportadas",rows.length],["Acordos no recorte",acordos.length],
+      ["Impacto mensal total",totalS.impacto],["Ferramenta","Aplicador de Dissídio / CCT v2.11"],["Assinatura","Anderson Marinho | Igarapé Digital"]]);
+  const fmtFi=["txt","txt"];
+  const wsF=sheetResumo(filt, fmtFi, {larguras:[24,60], semFiltro:true});
+  const idxImp=filt.findIndex(l=>l[0]==="Impacto mensal total");
+  const cImp=wsF[XLSX.utils.encode_cell({r:idxImp,c:1})]; if(cImp) cImp.z='"R$" #,##0.00';
+  XLSX.utils.book_append_sheet(wb, wsF, "Filtros");
+
+  XLSX.writeFile(wb, nome+".xlsx");
 }
 
 /* ============================================================
